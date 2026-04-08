@@ -10,6 +10,7 @@ import ThemePicker from '@/components/ThemePicker'
 import MaterialSelector from '@/components/MaterialSelector'
 import ParagraphReader from '@/components/ParagraphReader'
 import Dashboard from '@/components/Dashboard'
+import BottomNav from '@/components/BottomNav'
 
 type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'dashboard'
 type ParagraphStep = 'reading' | 'recording' | 'processing' | 'feedback'
@@ -275,7 +276,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — simplified, bottom nav handles main navigation */}
       <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
@@ -285,16 +286,6 @@ export default function Home() {
             isA Reading
           </button>
           <div className="flex items-center gap-3">
-            {/* Dashboard button */}
-            {child && step !== 'dashboard' && (
-              <button
-                onClick={() => setStep('dashboard')}
-                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors font-medium"
-              >
-                <span>{child.avatar}</span>
-                <span className="hidden sm:inline">{child.total_points} pts</span>
-              </button>
-            )}
             {step !== 'themes' && step !== 'select' && step !== 'dashboard' && (
               <button
                 onClick={handleNewMaterial}
@@ -311,23 +302,17 @@ export default function Home() {
                 Topics
               </button>
             )}
-            {child && (
-              <button
-                onClick={logout}
-                className="text-xs text-muted hover:text-red-500 transition-colors"
-              >
-                Logout
-              </button>
-            )}
           </div>
         </div>
       </header>
 
-      {/* Step indicator (not shown for theme picker) */}
-      {step !== 'themes' && <StepIndicator currentStep={toIndicatorStep(step)} />}
+      {/* Step indicator — only for reading flow steps */}
+      {step !== 'themes' && step !== 'dashboard' && (
+        <StepIndicator currentStep={toIndicatorStep(step)} />
+      )}
 
       {/* Main content */}
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-8">
+      <main className={`flex-1 max-w-2xl mx-auto w-full px-4 ${child ? 'pb-24' : 'pb-8'}`}>
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center justify-between">
             <span>{error}</span>
@@ -337,7 +322,7 @@ export default function Home() {
 
         {/* === Dashboard === */}
         {step === 'dashboard' && (
-          <Dashboard onClose={() => setStep('select')} />
+          <Dashboard onStartReading={() => setStep('select')} />
         )}
 
         {/* === Theme Picker === */}
@@ -409,6 +394,20 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Bottom navigation — only when logged in */}
+      {child && (
+        <BottomNav
+          activeTab={step === 'dashboard' ? 'dashboard' : 'read'}
+          onTabChange={(tab) => {
+            if (tab === 'dashboard') setStep('dashboard')
+            else if (step === 'dashboard') setStep('select')
+          }}
+          streak={child.current_streak}
+          points={child.total_points}
+          avatar={child.avatar}
+        />
+      )}
     </div>
   )
 }

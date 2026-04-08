@@ -47,6 +47,10 @@ body {
   color: var(--foreground);
 }
 
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Mobile-first touch targets */
 @media (pointer: coarse) {
   button, a, [role="button"] {

@@ -5,7 +5,7 @@ import { useAuth } from './AuthProvider'
 import type { GrowthMetrics, Badge, BadgeKey } from '@/types'
 import { BADGE_DEFS } from '@/types'
 
-export default function Dashboard({ onClose }: { onClose: () => void }) {
+export default function Dashboard({ onStartReading }: { onStartReading: () => void }) {
   const { child } = useAuth()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [badges, setBadges] = useState<Badge[]>([])
@@ -31,56 +31,55 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
     )
   }
 
-  if (!metrics) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-4xl mb-3">📊</p>
-        <p className="text-muted">No data yet. Start reading to see your growth!</p>
-        <button onClick={onClose} className="mt-4 px-6 py-3 bg-accent text-white rounded-2xl font-bold">
-          Start Reading
-        </button>
-      </div>
-    )
-  }
-
   const earnedBadgeKeys = new Set(badges.map(b => b.badge_key))
+  const earnedCount = badges.length
 
   return (
-    <div className="space-y-6 animate-scale-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{child?.avatar || '🎓'}</span>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">{child?.display_name || child?.username}</h2>
-            <p className="text-sm text-muted">Level {metrics.reading_level} Reader</p>
-          </div>
+    <div className="space-y-6 animate-scale-in pb-20">
+      {/* Profile header */}
+      <div className="flex items-center gap-4 p-5 bg-surface rounded-2xl border border-border">
+        <span className="text-5xl">{child?.avatar || '🎓'}</span>
+        <div className="flex-1">
+          <h2 className="text-xl font-bold text-foreground">{child?.display_name || child?.username}</h2>
+          <p className="text-sm text-muted">Level {metrics?.reading_level || 1} Reader</p>
         </div>
-        <button onClick={onClose} className="text-sm text-muted hover:text-foreground font-medium">
-          Back
-        </button>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats grid — color coded */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon="📖" value={metrics.total_readings} label="Readings" />
-        <StatCard icon="🎯" value={`${metrics.avg_accuracy}%`} label="Avg Score" />
-        <StatCard icon="🔥" value={metrics.current_streak} label="Day Streak" />
-        <StatCard icon="⭐" value={metrics.total_points} label="Points" />
+        <StatCard value={metrics?.total_readings || 0} label="Readings" color="blue" />
+        <StatCard value={`${metrics?.avg_accuracy || 0}%`} label="Avg Score" color="green" />
+        <StatCard value={metrics?.current_streak || 0} label="Day Streak" color="orange" />
+        <StatCard value={metrics?.total_points || 0} label="Points" color="amber" />
       </div>
 
       {/* Vocabulary */}
-      <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200">
-        <div className="flex items-center gap-2 mb-1">
-          <span>📚</span>
-          <span className="font-bold text-violet-700">{metrics.vocabulary_learned} words learned</span>
+      <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center gap-3">
+        <span className="text-3xl">📚</span>
+        <div>
+          <p className="font-bold text-violet-700">{metrics?.vocabulary_learned || 0} words learned</p>
+          <p className="text-xs text-violet-600">Vocabulary mastered through reading</p>
         </div>
-        <p className="text-xs text-violet-600">Vocabulary you&apos;ve mastered through reading</p>
       </div>
 
-      {/* Accuracy trend (simple bar chart) */}
-      {metrics.accuracy_trend.length > 0 && (
-        <div className="p-4 rounded-2xl bg-white border border-border">
+      {/* Start reading CTA (if no readings yet) */}
+      {(metrics?.total_readings || 0) === 0 && (
+        <div className="text-center p-6 bg-orange-50 rounded-2xl border-2 border-orange-200 border-dashed">
+          <p className="text-3xl mb-2">📖</p>
+          <p className="font-bold text-foreground mb-1">Ready for your first reading?</p>
+          <p className="text-sm text-muted mb-4">Pick a story and start practicing!</p>
+          <button
+            onClick={onStartReading}
+            className="px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold transition-all active:scale-95"
+          >
+            Start Reading
+          </button>
+        </div>
+      )}
+
+      {/* Accuracy trend */}
+      {metrics?.accuracy_trend && metrics.accuracy_trend.length > 0 && (
+        <div className="p-4 rounded-2xl bg-surface border border-border">
           <h3 className="font-bold text-foreground mb-3 text-sm">Accuracy Over Time</h3>
           <div className="flex items-end gap-1 h-24">
             {metrics.accuracy_trend.slice(-14).map((point, i) => (
@@ -99,9 +98,12 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
         </div>
       )}
 
-      {/* Badges */}
+      {/* Achievements */}
       <div>
-        <h3 className="font-bold text-foreground mb-3 text-sm">Achievements</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-foreground text-sm">Achievements</h3>
+          <span className="text-xs text-muted">{earnedCount} / {Object.keys(BADGE_DEFS).length} unlocked</span>
+        </div>
         <div className="grid grid-cols-4 gap-2">
           {(Object.entries(BADGE_DEFS) as [BadgeKey, typeof BADGE_DEFS[BadgeKey]][]).map(([key, def]) => {
             const earned = earnedBadgeKeys.has(key)
@@ -110,12 +112,12 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
                 key={key}
                 className={`p-3 rounded-2xl text-center transition-all ${
                   earned
-                    ? 'bg-amber-50 border-2 border-amber-200'
-                    : 'bg-gray-50 border border-gray-200 opacity-40'
+                    ? 'bg-amber-50 border-2 border-amber-300 shadow-sm'
+                    : 'bg-gray-50 border border-gray-100'
                 }`}
               >
-                <span className="text-2xl">{def.icon}</span>
-                <p className="text-[10px] font-semibold text-foreground mt-1 leading-tight">{def.name}</p>
+                <span className={`text-2xl ${earned ? '' : 'grayscale opacity-30'}`}>{def.icon}</span>
+                <p className={`text-[10px] font-semibold mt-1 leading-tight ${earned ? 'text-foreground' : 'text-muted/50'}`}>{def.name}</p>
               </div>
             )
           })}
@@ -123,18 +125,20 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Recent readings */}
-      {metrics.recent_readings.length > 0 && (
+      {metrics?.recent_readings && metrics.recent_readings.length > 0 && (
         <div>
           <h3 className="font-bold text-foreground mb-3 text-sm">Recent Readings</h3>
           <div className="space-y-2">
             {metrics.recent_readings.map((r, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white border border-border">
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
                 <div>
                   <p className="text-sm font-medium text-foreground">{r.title}</p>
                   <p className="text-xs text-muted">{r.date}</p>
                 </div>
-                <span className={`text-sm font-bold ${
-                  r.score >= 80 ? 'text-green-600' : r.score >= 60 ? 'text-amber-600' : 'text-red-500'
+                <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${
+                  r.score >= 80 ? 'bg-green-50 text-green-600' :
+                  r.score >= 60 ? 'bg-amber-50 text-amber-600' :
+                  'bg-red-50 text-red-500'
                 }`}>
                   {r.score}%
                 </span>
@@ -147,12 +151,18 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
   )
 }
 
-function StatCard({ icon, value, label }: { icon: string; value: string | number; label: string }) {
+function StatCard({ value, label, color }: { value: string | number; label: string; color: 'blue' | 'green' | 'orange' | 'amber' }) {
+  const styles = {
+    blue: 'bg-blue-50 border-blue-200 text-blue-600',
+    green: 'bg-green-50 border-green-200 text-green-600',
+    orange: 'bg-orange-50 border-orange-200 text-orange-600',
+    amber: 'bg-amber-50 border-amber-200 text-amber-600',
+  }
+
   return (
-    <div className="p-3 rounded-2xl bg-white border border-border text-center">
-      <span className="text-xl">{icon}</span>
-      <p className="text-lg font-bold text-foreground tabular-nums mt-1">{value}</p>
-      <p className="text-[10px] text-muted font-medium">{label}</p>
+    <div className={`p-3 rounded-2xl border text-center ${styles[color]}`}>
+      <p className="text-2xl font-bold tabular-nums">{value}</p>
+      <p className="text-[10px] font-semibold opacity-70">{label}</p>
     </div>
   )
 }
