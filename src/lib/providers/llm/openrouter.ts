@@ -40,7 +40,7 @@ export class OpenRouterLLMProvider implements LLMProvider {
 
   constructor(apiKey?: string, model?: string) {
     this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || ''
-    this.model = model || process.env.OPENROUTER_MODEL || 'google/gemma-3-27b-it'
+    this.model = model || process.env.OPENROUTER_MODEL || 'google/gemma-4-26b-a4b-it'
   }
 
   async assess(

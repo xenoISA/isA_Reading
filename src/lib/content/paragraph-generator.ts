@@ -113,7 +113,7 @@ export async function generateMaterial(options: GenerateOptions): Promise<Genera
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured')
 
-  const model = process.env.OPENROUTER_MODEL || 'google/gemma-3-27b-it'
+  const model = process.env.OPENROUTER_MODEL || 'google/gemma-4-26b-a4b-it'
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
