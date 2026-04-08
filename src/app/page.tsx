@@ -277,7 +277,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={handleNewMaterial}
             className="text-lg sm:text-xl font-bold text-accent hover:text-accent-hover transition-colors"
@@ -327,7 +327,7 @@ export default function Home() {
       {step !== 'themes' && <StepIndicator currentStep={toIndicatorStep(step)} />}
 
       {/* Main content */}
-      <main className="flex-1 max-w-xl mx-auto w-full px-4 pb-8">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-8">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center justify-between">
             <span>{error}</span>

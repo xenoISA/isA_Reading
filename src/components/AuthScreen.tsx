@@ -3,6 +3,23 @@
 import { useState } from 'react'
 import { useAuth } from './AuthProvider'
 
+function PinDots({ length }: { length: number }) {
+  return (
+    <div className="flex gap-3 justify-center" aria-hidden="true">
+      {[0, 1, 2, 3].map(i => (
+        <div
+          key={i}
+          className={`size-4 rounded-full transition-all duration-150 ${
+            i < length
+              ? 'bg-accent scale-110'
+              : 'bg-border'
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function AuthScreen() {
   const { login, signup } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -32,47 +49,61 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        {/* Logo */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-accent">isA Reading</h1>
-          <p className="text-muted mt-1">
-            {mode === 'login' ? 'Welcome back!' : 'Create your reader profile'}
+      <div className="w-full max-w-sm space-y-8">
+        {/* Mascot area */}
+        <div className="text-center space-y-3">
+          <div className="text-6xl sm:text-7xl leading-none" aria-hidden="true">
+            {mode === 'login' ? '🦊' : '🎉'}
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-accent text-balance">
+            {mode === 'login' ? 'Welcome Back, Reader!' : 'Join the Reading Adventure!'}
+          </h1>
+          <p className="text-muted text-sm">
+            {mode === 'login'
+              ? 'Enter your reader name and secret PIN'
+              : 'Pick a reader name and a secret 4-digit PIN'}
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1">Username</label>
+            <label htmlFor="username" className="block text-sm font-semibold text-foreground mb-1.5">
+              {mode === 'signup' ? 'Choose your reader name' : 'Your reader name'}
+            </label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="Your reader name"
-              className="w-full px-4 py-3 rounded-2xl border-2 border-border bg-white text-foreground text-base focus:border-accent focus:outline-none transition-colors"
+              placeholder={mode === 'signup' ? 'e.g. star_reader' : 'Your reader name'}
+              className="w-full px-4 py-3.5 rounded-2xl border-2 border-border bg-surface text-foreground text-base focus:border-accent focus:outline-none transition-colors placeholder:text-muted/50"
               autoComplete="username"
+              autoCapitalize="none"
               required
             />
           </div>
 
           {mode === 'signup' && (
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-foreground mb-1">Display Name (optional)</label>
+              <label htmlFor="displayName" className="block text-sm font-semibold text-foreground mb-1.5">
+                What should we call you?
+              </label>
               <input
                 id="displayName"
                 type="text"
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
-                placeholder="How should we call you?"
-                className="w-full px-4 py-3 rounded-2xl border-2 border-border bg-white text-foreground text-base focus:border-accent focus:outline-none transition-colors"
+                placeholder="Your name (optional)"
+                className="w-full px-4 py-3.5 rounded-2xl border-2 border-border bg-surface text-foreground text-base focus:border-accent focus:outline-none transition-colors placeholder:text-muted/50"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="pin" className="block text-sm font-medium text-foreground mb-1">4-Digit PIN</label>
+            <label htmlFor="pin" className="block text-sm font-semibold text-foreground mb-1.5">
+              Secret PIN
+            </label>
             <input
               id="pin"
               type="password"
@@ -81,49 +112,63 @@ export default function AuthScreen() {
               maxLength={4}
               value={pin}
               onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="****"
-              className="w-full px-4 py-3 rounded-2xl border-2 border-border bg-white text-foreground text-center text-2xl tracking-[0.5em] font-mono focus:border-accent focus:outline-none transition-colors"
+              placeholder="4 digits"
+              className="w-full px-4 py-3.5 rounded-2xl border-2 border-border bg-surface text-foreground text-center text-2xl tracking-[0.5em] font-mono focus:border-accent focus:outline-none transition-colors placeholder:text-base placeholder:tracking-normal"
               autoComplete="current-password"
               required
             />
+            <div className="mt-3">
+              <PinDots length={pin.length} />
+            </div>
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center bg-red-50 rounded-xl p-2">{error}</p>
+            <div className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3 border border-red-200" role="alert">
+              {error}
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading || !username || pin.length !== 4}
-            className="w-full py-4 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white rounded-2xl font-bold text-base transition-all active:scale-95"
+            className="w-full py-4 bg-accent hover:bg-accent-hover disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-2xl font-bold text-base transition-all active:scale-95"
           >
-            {loading ? 'Loading...' : mode === 'login' ? 'Log In' : 'Create Account'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Loading...
+              </span>
+            ) : mode === 'login' ? (
+              "Let's Read!"
+            ) : (
+              'Create My Account'
+            )}
           </button>
         </form>
 
         {/* Switch mode */}
-        <p className="text-center text-sm text-muted">
-          {mode === 'login' ? (
-            <>
-              New reader?{' '}
-              <button onClick={() => { setMode('signup'); setError('') }} className="text-accent font-semibold">
-                Create account
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{' '}
-              <button onClick={() => { setMode('login'); setError('') }} className="text-accent font-semibold">
-                Log in
-              </button>
-            </>
-          )}
-        </p>
-
-        {/* Skip auth for now */}
-        <p className="text-center text-xs text-muted">
-          <a href="/?skip_auth=true" className="underline">Continue without account</a>
-        </p>
+        <div className="text-center space-y-3">
+          <p className="text-sm text-muted">
+            {mode === 'login' ? (
+              <>
+                First time here?{' '}
+                <button onClick={() => { setMode('signup'); setError('') }} className="text-accent font-bold hover:underline">
+                  Create account
+                </button>
+              </>
+            ) : (
+              <>
+                Already a reader?{' '}
+                <button onClick={() => { setMode('login'); setError('') }} className="text-accent font-bold hover:underline">
+                  Log in
+                </button>
+              </>
+            )}
+          </p>
+          <a href="/?skip_auth=true" className="text-xs text-muted/60 hover:text-muted underline transition-colors">
+            Continue without account
+          </a>
+        </div>
       </div>
     </div>
   )

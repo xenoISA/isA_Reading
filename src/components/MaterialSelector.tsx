@@ -139,7 +139,7 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes }
           </button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {materials.map((m, index) => {
             const config = LEVEL_CONFIG[m.difficulty] || LEVEL_CONFIG[1]
             const paragraphCount = m.paragraphs?.length || 1

@@ -43,7 +43,7 @@ export default function ThemePicker({ onComplete }: Props) {
         <p className="text-muted mt-2">Pick your favorite topics</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {THEMES.map(theme => {
           const isSelected = selected.includes(theme.key)
           return (
