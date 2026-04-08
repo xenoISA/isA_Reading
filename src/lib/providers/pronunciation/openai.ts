@@ -154,7 +154,7 @@ export class OpenAIPronunciationAnalyzer {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-audio-preview',
+        model: 'gpt-4o-mini-audio-preview',
         messages: [{ role: 'user', content }],
         temperature: 0.3,
         modalities: ['text'],
