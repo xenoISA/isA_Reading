@@ -1,65 +1,414 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useCallback } from 'react'
+import type { Material, Theme, LLMAssessment, ParagraphProgress, PronunciationResult } from '@/types'
+import { BADGE_DEFS, type BadgeKey } from '@/types'
+import { useAuth } from '@/components/AuthProvider'
+import AuthScreen from '@/components/AuthScreen'
+import StepIndicator from '@/components/StepIndicator'
+import ThemePicker from '@/components/ThemePicker'
+import MaterialSelector from '@/components/MaterialSelector'
+import ParagraphReader from '@/components/ParagraphReader'
+import Dashboard from '@/components/Dashboard'
+
+type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'dashboard'
+type ParagraphStep = 'reading' | 'recording' | 'processing' | 'feedback'
+
+function speakWithBrowser(text: string) {
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'en-US'
+  utterance.rate = 0.85
+  speechSynthesis.speak(utterance)
+}
+
+// Map outer step to StepIndicator step
+function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing' | 'feedback' {
+  if (step === 'themes' || step === 'dashboard') return 'select'
+  return step
+}
 
 export default function Home() {
+  const { child, loading: authLoading, logout } = useAuth()
+  const [skipAuth, setSkipAuth] = useState(false)
+  const [step, setStep] = useState<Step>('themes')
+  const [newBadgePopup, setNewBadgePopup] = useState<BadgeKey | null>(null)
+  const [preferredThemes, setPreferredThemes] = useState<Theme[]>([])
+  const [material, setMaterial] = useState<Material | null>(null)
+  const [currentParagraph, setCurrentParagraph] = useState(0)
+  const [paragraphStep, setParagraphStep] = useState<ParagraphStep>('reading')
+  const [paragraphProgress, setParagraphProgress] = useState<ParagraphProgress[]>([])
+  const [ttsLoading, setTtsLoading] = useState(false)
+  const [ttsPlaying, setTtsPlaying] = useState(false)
+  const [studentText, setStudentText] = useState('')
+  const [assessment, setAssessment] = useState<LLMAssessment | null>(null)
+  const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleThemesComplete = useCallback((themes: Theme[]) => {
+    setPreferredThemes(themes)
+    setStep('select')
+  }, [])
+
+  const handleSelectMaterial = useCallback((m: Material) => {
+    setMaterial(m)
+    setCurrentParagraph(0)
+    setParagraphStep('reading')
+    setAssessment(null)
+    setStudentText('')
+    setError(null)
+    // Initialize paragraph progress
+    const progress: ParagraphProgress[] = (m.paragraphs || []).map((_, i) => ({
+      paragraph_index: i,
+      status: 'pending' as const,
+    }))
+    setParagraphProgress(progress)
+    setStep('read')
+  }, [])
+
+  const handlePlayParagraph = useCallback(async () => {
+    if (!material?.paragraphs?.[currentParagraph]) return
+    setTtsLoading(true)
+    setError(null)
+
+    const text = material.paragraphs[currentParagraph].text
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+
+      if (res.status === 503) {
+        speakWithBrowser(text)
+        return
+      }
+      if (!res.ok) throw new Error('TTS failed')
+
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      setTtsPlaying(true)
+      audio.onended = () => setTtsPlaying(false)
+      audio.play()
+    } catch {
+      speakWithBrowser(text)
+    } finally {
+      setTtsLoading(false)
+    }
+  }, [material, currentParagraph])
+
+  const handleStartRecording = useCallback(() => {
+    setParagraphStep('recording')
+    setStep('record')
+  }, [])
+
+  const handleRecordingComplete = useCallback(async (blob: Blob) => {
+    if (!material?.paragraphs?.[currentParagraph]) return
+    setParagraphStep('processing')
+    setStep('processing')
+    setError(null)
+
+    const paragraph = material.paragraphs[currentParagraph]
+
+    try {
+      // Run transcription + pronunciation analysis in parallel
+      const transcribeForm = new FormData()
+      transcribeForm.append('audio', blob, 'recording.webm')
+
+      // Convert to wav for pronunciation API (client-side, no ffmpeg needed)
+      let wavBlob: Blob | null = null
+      try {
+        const { convertBlobToWav } = await import('@/lib/audio-utils')
+        wavBlob = await convertBlobToWav(blob)
+      } catch { /* wav conversion failed, will skip pronunciation */ }
+
+      const pronounceForm = new FormData()
+      if (wavBlob) {
+        pronounceForm.append('audio', wavBlob, 'recording.wav')
+      } else {
+        pronounceForm.append('audio', blob, 'recording.webm')
+      }
+      pronounceForm.append('target_text', paragraph.text)
+      pronounceForm.append('keywords', JSON.stringify(paragraph.keywords))
+
+      const [transcribeRes, pronounceRes] = await Promise.all([
+        fetch('/api/transcribe', { method: 'POST', body: transcribeForm }),
+        fetch('/api/pronounce', { method: 'POST', body: pronounceForm }).catch(() => null),
+      ])
+
+      if (!transcribeRes.ok) {
+        const err = await transcribeRes.json()
+        throw new Error(err.error || 'Transcription failed')
+      }
+      const transcript = await transcribeRes.json()
+      setStudentText(transcript.text)
+
+      // Get pronunciation results (non-blocking — falls back gracefully)
+      let pronResult: PronunciationResult | null = null
+      if (pronounceRes?.ok) {
+        pronResult = await pronounceRes.json()
+        setPronunciation(pronResult)
+      }
+
+      // LLM text assessment (uses OpenRouter — cheap)
+      const assessRes = await fetch('/api/assess', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_text: paragraph.text,
+          student_text: transcript.text,
+          difficulty: material.difficulty,
+          domain: material.theme,
+          paragraph_index: currentParagraph,
+          total_paragraphs: material.paragraphs.length,
+          keywords: paragraph.keywords,
+        }),
+      })
+      if (!assessRes.ok) {
+        const err = await assessRes.json()
+        throw new Error(err.error || 'Assessment failed')
+      }
+      const result = await assessRes.json()
+      setAssessment(result)
+
+      // Show new badge popup if earned
+      if (result.new_badges?.length > 0) {
+        setNewBadgePopup(result.new_badges[0] as BadgeKey)
+        setTimeout(() => setNewBadgePopup(null), 4000)
+      }
+
+      // Update paragraph progress
+      setParagraphProgress(prev => {
+        const updated = [...prev]
+        updated[currentParagraph] = {
+          paragraph_index: currentParagraph,
+          status: 'completed',
+          accuracy_score: result.accuracy_score,
+          transcript: transcript.text,
+          assessment: result,
+        }
+        return updated
+      })
+
+      setParagraphStep('feedback')
+      setStep('feedback')
+    } catch (err) {
+      console.error(err)
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setParagraphStep('recording')
+      setStep('record')
+    }
+  }, [material, currentParagraph])
+
+  const handleRetryParagraph = useCallback(() => {
+    setAssessment(null)
+    setPronunciation(null)
+    setStudentText('')
+    setParagraphStep('recording')
+    setStep('record')
+  }, [])
+
+  const handleNextParagraph = useCallback(() => {
+    setCurrentParagraph(prev => prev + 1)
+    setAssessment(null)
+    setPronunciation(null)
+    setStudentText('')
+    setParagraphStep('reading')
+    setStep('read')
+  }, [])
+
+  const handlePrevParagraph = useCallback(() => {
+    setCurrentParagraph(prev => Math.max(0, prev - 1))
+    setParagraphStep('reading')
+    setStep('read')
+  }, [])
+
+  const handleNewMaterial = useCallback(() => {
+    setStep('select')
+    setMaterial(null)
+    setAssessment(null)
+    setStudentText('')
+    setCurrentParagraph(0)
+    setParagraphProgress([])
+    setError(null)
+  }, [])
+
+  const handleChangeThemes = useCallback(() => {
+    localStorage.removeItem('isa-reading-themes')
+    setStep('themes')
+  }, [])
+
+  // Calculate overall progress
+  const completedParagraphs = paragraphProgress.filter(p => p.status === 'completed').length
+  const totalParagraphs = material?.paragraphs?.length || 0
+  const averageScore = completedParagraphs > 0
+    ? Math.round(paragraphProgress.reduce((sum, p) => sum + (p.accuracy_score || 0), 0) / completedParagraphs)
+    : 0
+
+  // Auth gate: show login if Supabase configured and not logged in
+  if (authLoading) {
+    return (
+      <div className="min-h-dvh bg-background flex items-center justify-center">
+        <div className="size-10 border-4 border-border border-t-accent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const useSupabase = typeof window !== 'undefined' && !skipAuth
+  const needsAuth = useSupabase && !child && typeof window !== 'undefined' &&
+    !new URLSearchParams(window.location.search).has('skip_auth')
+
+  if (needsAuth) {
+    return <AuthScreen />
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-dvh bg-background flex flex-col">
+      {/* Badge popup */}
+      {newBadgePopup && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce-in">
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl px-6 py-4 shadow-lg text-center">
+            <p className="text-3xl">{BADGE_DEFS[newBadgePopup]?.icon}</p>
+            <p className="font-bold text-amber-800 mt-1">New Badge!</p>
+            <p className="text-sm text-amber-600">{BADGE_DEFS[newBadgePopup]?.name}</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      )}
+
+      {/* Header */}
+      <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={handleNewMaterial}
+            className="text-lg sm:text-xl font-bold text-accent hover:text-accent-hover transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            isA Reading
+          </button>
+          <div className="flex items-center gap-3">
+            {/* Dashboard button */}
+            {child && step !== 'dashboard' && (
+              <button
+                onClick={() => setStep('dashboard')}
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors font-medium"
+              >
+                <span>{child.avatar}</span>
+                <span className="hidden sm:inline">{child.total_points} pts</span>
+              </button>
+            )}
+            {step !== 'themes' && step !== 'select' && step !== 'dashboard' && (
+              <button
+                onClick={handleNewMaterial}
+                className="text-sm text-muted hover:text-foreground transition-colors font-medium"
+              >
+                Change
+              </button>
+            )}
+            {step === 'select' && (
+              <button
+                onClick={handleChangeThemes}
+                className="text-sm text-muted hover:text-foreground transition-colors font-medium"
+              >
+                Topics
+              </button>
+            )}
+            {child && (
+              <button
+                onClick={logout}
+                className="text-xs text-muted hover:text-red-500 transition-colors"
+              >
+                Logout
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Step indicator (not shown for theme picker) */}
+      {step !== 'themes' && <StepIndicator currentStep={toIndicatorStep(step)} />}
+
+      {/* Main content */}
+      <main className="flex-1 max-w-xl mx-auto w-full px-4 pb-8">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} aria-label="Dismiss error" className="text-red-400 hover:text-red-600 font-bold text-lg leading-none">&times;</button>
+          </div>
+        )}
+
+        {/* === Dashboard === */}
+        {step === 'dashboard' && (
+          <Dashboard onClose={() => setStep('select')} />
+        )}
+
+        {/* === Theme Picker === */}
+        {step === 'themes' && (
+          <ThemePicker onComplete={handleThemesComplete} />
+        )}
+
+        {/* === Select Material === */}
+        {step === 'select' && (
+          <div className="animate-scale-in">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 text-balance">
+              Choose a reading
+            </h2>
+            <p className="text-muted mb-5">Pick a story that looks fun</p>
+            <MaterialSelector
+              onSelect={handleSelectMaterial}
+              selected={material}
+              preferredThemes={preferredThemes}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </div>
+        )}
+
+        {/* === Reading Flow (paragraph by paragraph) === */}
+        {(step === 'read' || step === 'record' || step === 'processing' || step === 'feedback') && material && (
+          <div className="space-y-4">
+            {/* Material title + progress */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">{material.title}</h2>
+              {completedParagraphs > 0 && (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600">
+                  {completedParagraphs}/{totalParagraphs} done
+                  {averageScore > 0 && ` · ${averageScore}%`}
+                </span>
+              )}
+            </div>
+
+            <ParagraphReader
+              paragraphs={material.paragraphs || [{ index: 0, text: material.content, keywords: [] }]}
+              currentIndex={currentParagraph}
+              progress={paragraphProgress}
+              step={paragraphStep}
+              assessment={assessment}
+              pronunciation={pronunciation}
+              studentText={studentText}
+              ttsLoading={ttsLoading}
+              ttsPlaying={ttsPlaying}
+              onPlayParagraph={handlePlayParagraph}
+              onStartRecording={handleStartRecording}
+              onRecordingComplete={handleRecordingComplete}
+              onRetryParagraph={handleRetryParagraph}
+              onNextParagraph={handleNextParagraph}
+              onPrevParagraph={handlePrevParagraph}
+            />
+
+            {/* Overall summary when all paragraphs done */}
+            {completedParagraphs === totalParagraphs && totalParagraphs > 0 && step === 'feedback' && currentParagraph === totalParagraphs - 1 && (
+              <div className="mt-6 p-5 bg-green-50 border-2 border-green-200 rounded-2xl text-center space-y-3 animate-bounce-in">
+                <p className="text-3xl">🎉</p>
+                <p className="text-lg font-bold text-green-700">All paragraphs complete!</p>
+                <p className="text-sm text-green-600">Average score: {averageScore}%</p>
+                <button
+                  onClick={handleNewMaterial}
+                  className="mt-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold transition-all active:scale-95"
+                >
+                  Read Something New
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
-  );
+  )
 }
