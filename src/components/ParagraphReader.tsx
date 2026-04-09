@@ -9,6 +9,7 @@ interface Props {
   currentIndex: number
   progress: ParagraphProgress[]
   step: 'reading' | 'recording' | 'processing' | 'feedback'
+  processingStage?: 'transcribing' | 'analyzing' | 'scoring'
   assessment: LLMAssessment | null
   pronunciation: PronunciationResult | null
   studentText: string
@@ -20,6 +21,8 @@ interface Props {
   onRetryParagraph: () => void
   onNextParagraph: () => void
   onPrevParagraph: () => void
+  onPauseReading?: () => void
+  onStartOver?: () => void
 }
 
 function HighlightedText({ text, keywords }: { text: string; keywords: string[] }) {
@@ -79,6 +82,7 @@ export default function ParagraphReader({
   currentIndex,
   progress,
   step,
+  processingStage,
   assessment,
   pronunciation,
   studentText,
@@ -90,6 +94,8 @@ export default function ParagraphReader({
   onRetryParagraph,
   onNextParagraph,
   onPrevParagraph,
+  onPauseReading,
+  onStartOver,
 }: Props) {
   const paragraph = paragraphs[currentIndex]
   const isFirst = currentIndex === 0
@@ -98,12 +104,30 @@ export default function ParagraphReader({
 
   return (
     <div className="space-y-5 animate-scale-in">
-      {/* Paragraph progress dots */}
+      {/* Paragraph progress dots + controls */}
       <div className="space-y-2">
         <ParagraphNav total={paragraphs.length} current={currentIndex} progress={progress} />
-        <p className="text-center text-xs text-muted">
-          Paragraph {currentIndex + 1} of {paragraphs.length}
-        </p>
+        <div className="flex items-center justify-between">
+          {onStartOver ? (
+            <button
+              onClick={onStartOver}
+              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+            >
+              Start over
+            </button>
+          ) : <div />}
+          <p className="text-center text-xs text-muted flex-1">
+            Paragraph {currentIndex + 1} of {paragraphs.length}
+          </p>
+          {onPauseReading ? (
+            <button
+              onClick={onPauseReading}
+              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+            >
+              Pause
+            </button>
+          ) : <div />}
+        </div>
       </div>
 
       {/* === Reading step === */}
@@ -192,14 +216,27 @@ export default function ParagraphReader({
 
       {/* === Processing step === */}
       {step === 'processing' && (
-        <div className="text-center py-12 space-y-5">
+        <div className="text-center py-12 space-y-6">
           <div className="relative mx-auto size-16">
             <div className="absolute inset-0 rounded-full border-4 border-border" />
             <div className="absolute inset-0 rounded-full border-4 border-accent border-t-transparent animate-spin" />
           </div>
-          <div>
+          <div className="space-y-4">
             <p className="text-lg font-bold text-foreground">Checking paragraph {currentIndex + 1}...</p>
-            <p className="text-sm text-muted mt-1">Listening to your reading</p>
+            <div className="flex flex-col items-center gap-2 text-sm">
+              <span className={processingStage === 'transcribing' ? 'text-accent font-semibold' : 'text-green-600'}>
+                {processingStage === 'transcribing' ? '\u23F3' : '\u2713'} Transcribing your reading...
+              </span>
+              <span className={
+                processingStage === 'analyzing' ? 'text-accent font-semibold' :
+                processingStage === 'scoring' ? 'text-green-600' : 'text-muted'
+              }>
+                {processingStage === 'scoring' || processingStage === 'analyzing' ? (processingStage === 'scoring' ? '\u2713' : '\u23F3') : '\u25CB'} Analyzing pronunciation...
+              </span>
+              <span className={processingStage === 'scoring' ? 'text-accent font-semibold' : 'text-muted'}>
+                {processingStage === 'scoring' ? '\u23F3' : '\u25CB'} Generating feedback...
+              </span>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Material, Theme, LLMAssessment, ParagraphProgress, PronunciationResult } from '@/types'
 import { BADGE_DEFS, type BadgeKey } from '@/types'
 import { useAuth } from '@/components/AuthProvider'
@@ -28,6 +28,41 @@ function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing
   return step
 }
 
+const SESSION_STORAGE_KEY = 'isa-reading-session'
+
+interface SavedSession {
+  materialId: string
+  currentParagraph: number
+  paragraphStep: ParagraphStep
+  paragraphProgress: ParagraphProgress[]
+  savedAt: string
+}
+
+function saveSession(materialId: string, currentParagraph: number, paragraphStep: ParagraphStep, paragraphProgress: ParagraphProgress[]) {
+  try {
+    const session: SavedSession = {
+      materialId,
+      currentParagraph,
+      paragraphStep: paragraphStep === 'recording' || paragraphStep === 'processing' ? 'reading' : paragraphStep,
+      paragraphProgress,
+      savedAt: new Date().toISOString(),
+    }
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
+  } catch { /* localStorage full or unavailable */ }
+}
+
+function loadSession(): SavedSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_STORAGE_KEY) } catch {}
+}
+
 export default function Home() {
   const { child, loading: authLoading, logout } = useAuth()
   const [skipAuth, setSkipAuth] = useState(false)
@@ -44,26 +79,58 @@ export default function Home() {
   const [assessment, setAssessment] = useState<LLMAssessment | null>(null)
   const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
+  const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
 
   const handleThemesComplete = useCallback((themes: Theme[]) => {
     setPreferredThemes(themes)
     setStep('select')
   }, [])
 
+  // Auto-save session on meaningful state changes
+  useEffect(() => {
+    if (material && (step === 'read' || step === 'record' || step === 'processing' || step === 'feedback')) {
+      saveSession(material.id, currentParagraph, paragraphStep, paragraphProgress)
+    }
+  }, [material, currentParagraph, paragraphStep, paragraphProgress, step])
+
+  // Load saved material ID (re-check when returning to select)
+  useEffect(() => {
+    const saved = loadSession()
+    setSavedMaterialId(saved?.materialId ?? null)
+  }, [step])
+
   const handleSelectMaterial = useCallback((m: Material) => {
+    const saved = loadSession()
+    if (saved && saved.materialId === m.id) {
+      // Resume saved session
+      setMaterial(m)
+      setCurrentParagraph(saved.currentParagraph)
+      setParagraphStep(saved.paragraphStep)
+      setAssessment(null)
+      setPronunciation(null)
+      setStudentText('')
+      setError(null)
+      setParagraphProgress(saved.paragraphProgress)
+      setStep(saved.paragraphStep === 'feedback' ? 'feedback' : 'read')
+      return
+    }
+    // Fresh start
     setMaterial(m)
     setCurrentParagraph(0)
     setParagraphStep('reading')
     setAssessment(null)
+    setPronunciation(null)
     setStudentText('')
     setError(null)
-    // Initialize paragraph progress
     const progress: ParagraphProgress[] = (m.paragraphs || []).map((_, i) => ({
       paragraph_index: i,
       status: 'pending' as const,
     }))
     setParagraphProgress(progress)
     setStep('read')
+    clearSession()
+    setSavedMaterialId(null)
   }, [])
 
   const handlePlayParagraph = useCallback(async () => {
@@ -107,12 +174,13 @@ export default function Home() {
     if (!material?.paragraphs?.[currentParagraph]) return
     setParagraphStep('processing')
     setStep('processing')
+    setProcessingStage('transcribing')
     setError(null)
 
     const paragraph = material.paragraphs[currentParagraph]
 
     try {
-      // Run transcription + pronunciation analysis in parallel
+      // Build forms
       const transcribeForm = new FormData()
       transcribeForm.append('audio', blob, 'recording.webm')
 
@@ -121,7 +189,7 @@ export default function Home() {
       try {
         const { convertBlobToWav } = await import('@/lib/audio-utils')
         wavBlob = await convertBlobToWav(blob)
-      } catch { /* wav conversion failed, will skip pronunciation */ }
+      } catch { /* wav conversion failed */ }
 
       const pronounceForm = new FormData()
       if (wavBlob) {
@@ -132,27 +200,22 @@ export default function Home() {
       pronounceForm.append('target_text', paragraph.text)
       pronounceForm.append('keywords', JSON.stringify(paragraph.keywords))
 
-      const [transcribeRes, pronounceRes] = await Promise.all([
-        fetch('/api/transcribe', { method: 'POST', body: transcribeForm }),
-        fetch('/api/pronounce', { method: 'POST', body: pronounceForm }).catch(() => null),
-      ])
+      // Start transcribe + pronounce in parallel
+      const transcribePromise = fetch('/api/transcribe', { method: 'POST', body: transcribeForm })
+      const pronouncePromise = fetch('/api/pronounce', { method: 'POST', body: pronounceForm }).catch(() => null)
 
+      // Wait for transcribe (needed for assess)
+      const transcribeRes = await transcribePromise
       if (!transcribeRes.ok) {
         const err = await transcribeRes.json()
         throw new Error(err.error || 'Transcription failed')
       }
       const transcript = await transcribeRes.json()
       setStudentText(transcript.text)
+      setProcessingStage('analyzing')
 
-      // Get pronunciation results (non-blocking — falls back gracefully)
-      let pronResult: PronunciationResult | null = null
-      if (pronounceRes?.ok) {
-        pronResult = await pronounceRes.json()
-        setPronunciation(pronResult)
-      }
-
-      // LLM text assessment (uses OpenRouter — cheap)
-      const assessRes = await fetch('/api/assess', {
+      // Start assess immediately (don't wait for pronounce!)
+      const assessPromise = fetch('/api/assess', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,6 +228,22 @@ export default function Home() {
           keywords: paragraph.keywords,
         }),
       })
+
+      setProcessingStage('scoring')
+
+      // Wait for both assess and pronounce in parallel
+      const [assessRes, pronounceRes] = await Promise.all([
+        assessPromise,
+        pronouncePromise,
+      ])
+
+      // Process pronunciation (non-blocking)
+      if (pronounceRes?.ok) {
+        const pronResult = await pronounceRes.json()
+        setPronunciation(pronResult)
+      }
+
+      // Process assessment
       if (!assessRes.ok) {
         const err = await assessRes.json()
         throw new Error(err.error || 'Assessment failed')
@@ -225,14 +304,39 @@ export default function Home() {
   }, [])
 
   const handleNewMaterial = useCallback(() => {
+    clearSession()
+    setSavedMaterialId(null)
     setStep('select')
     setMaterial(null)
     setAssessment(null)
+    setPronunciation(null)
     setStudentText('')
     setCurrentParagraph(0)
     setParagraphProgress([])
     setError(null)
   }, [])
+
+  const handlePauseReading = useCallback(() => {
+    // Session already auto-saved via useEffect
+    setStep('select')
+  }, [])
+
+  const handleStartOver = useCallback(() => {
+    if (!material) return
+    clearSession()
+    setCurrentParagraph(0)
+    setParagraphStep('reading')
+    setAssessment(null)
+    setPronunciation(null)
+    setStudentText('')
+    setError(null)
+    const progress: ParagraphProgress[] = (material.paragraphs || []).map((_, i) => ({
+      paragraph_index: i,
+      status: 'pending' as const,
+    }))
+    setParagraphProgress(progress)
+    setStep('read')
+  }, [material])
 
   const handleChangeThemes = useCallback(() => {
     localStorage.removeItem('isa-reading-themes')
@@ -341,6 +445,7 @@ export default function Home() {
               onSelect={handleSelectMaterial}
               selected={material}
               preferredThemes={preferredThemes}
+              savedMaterialId={savedMaterialId}
             />
           </div>
         )}
@@ -364,6 +469,7 @@ export default function Home() {
               currentIndex={currentParagraph}
               progress={paragraphProgress}
               step={paragraphStep}
+              processingStage={processingStage}
               assessment={assessment}
               pronunciation={pronunciation}
               studentText={studentText}
@@ -375,6 +481,8 @@ export default function Home() {
               onRetryParagraph={handleRetryParagraph}
               onNextParagraph={handleNextParagraph}
               onPrevParagraph={handlePrevParagraph}
+              onPauseReading={handlePauseReading}
+              onStartOver={handleStartOver}
             />
 
             {/* Overall summary when all paragraphs done */}
