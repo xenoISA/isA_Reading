@@ -9,10 +9,11 @@ import StepIndicator from '@/components/StepIndicator'
 import ThemePicker from '@/components/ThemePicker'
 import MaterialSelector from '@/components/MaterialSelector'
 import ParagraphReader from '@/components/ParagraphReader'
+import DrillMode from '@/components/DrillMode'
 import Dashboard from '@/components/Dashboard'
 import BottomNav from '@/components/BottomNav'
 
-type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'dashboard'
+type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'drill' | 'dashboard'
 type ParagraphStep = 'reading' | 'recording' | 'processing' | 'feedback'
 
 function speakWithBrowser(text: string) {
@@ -25,6 +26,7 @@ function speakWithBrowser(text: string) {
 // Map outer step to StepIndicator step
 function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing' | 'feedback' {
   if (step === 'themes' || step === 'dashboard') return 'select'
+  if (step === 'drill') return 'feedback'
   return step
 }
 
@@ -78,6 +80,7 @@ export default function Home() {
   const [studentText, setStudentText] = useState('')
   const [assessment, setAssessment] = useState<LLMAssessment | null>(null)
   const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
+  const [drillWords, setDrillWords] = useState<{ word: string; tip: string }[]>([])
   const [error, setError] = useState<string | null>(null)
   const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
   const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
@@ -89,7 +92,7 @@ export default function Home() {
 
   // Auto-save session on meaningful state changes
   useEffect(() => {
-    if (material && (step === 'read' || step === 'record' || step === 'processing' || step === 'feedback')) {
+    if (material && (step === 'read' || step === 'record' || step === 'processing' || step === 'feedback' || step === 'drill')) {
       saveSession(material.id, currentParagraph, paragraphStep, paragraphProgress)
     }
   }, [material, currentParagraph, paragraphStep, paragraphProgress, step])
@@ -288,6 +291,37 @@ export default function Home() {
     setStep('record')
   }, [])
 
+  const handleStartDrill = useCallback(() => {
+    const words: { word: string; tip: string }[] = []
+
+    if (pronunciation?.mispronounced) {
+      for (const m of pronunciation.mispronounced) {
+        if (m.word.length > 1) {
+          words.push({ word: m.word, tip: m.tip })
+        }
+      }
+    } else if (assessment?.mispronounced_words) {
+      for (const m of assessment.mispronounced_words) {
+        words.push({ word: m.expected, tip: `You said "${m.actual}"` })
+      }
+    }
+
+    if (words.length > 0) {
+      setDrillWords(words)
+      setStep('drill')
+    }
+  }, [pronunciation, assessment])
+
+  const handleDrillComplete = useCallback(async (results: { word: string; attempts: number; bestScore: number; passed: boolean }[]) => {
+    setStep('feedback')
+    setDrillWords([])
+  }, [])
+
+  const handleDrillSkip = useCallback(() => {
+    setStep('feedback')
+    setDrillWords([])
+  }, [])
+
   const handleNextParagraph = useCallback(() => {
     setCurrentParagraph(prev => prev + 1)
     setAssessment(null)
@@ -411,7 +445,7 @@ export default function Home() {
       </header>
 
       {/* Step indicator — only for reading flow steps */}
-      {step !== 'themes' && step !== 'dashboard' && (
+      {step !== 'themes' && step !== 'dashboard' && step !== 'drill' && (
         <StepIndicator currentStep={toIndicatorStep(step)} />
       )}
 
@@ -451,7 +485,7 @@ export default function Home() {
         )}
 
         {/* === Reading Flow (paragraph by paragraph) === */}
-        {(step === 'read' || step === 'record' || step === 'processing' || step === 'feedback') && material && (
+        {(step === 'read' || step === 'record' || step === 'processing' || step === 'feedback' || step === 'drill') && material && (
           <div className="space-y-4">
             {/* Material title + progress */}
             <div className="flex items-center justify-between">
@@ -483,7 +517,17 @@ export default function Home() {
               onPrevParagraph={handlePrevParagraph}
               onPauseReading={handlePauseReading}
               onStartOver={handleStartOver}
+              onStartDrill={handleStartDrill}
             />
+
+            {/* Drill mode */}
+            {step === 'drill' && drillWords.length > 0 && (
+              <DrillMode
+                words={drillWords}
+                onComplete={handleDrillComplete}
+                onSkip={handleDrillSkip}
+              />
+            )}
 
             {/* Overall summary when all paragraphs done */}
             {completedParagraphs === totalParagraphs && totalParagraphs > 0 && step === 'feedback' && currentParagraph === totalParagraphs - 1 && (

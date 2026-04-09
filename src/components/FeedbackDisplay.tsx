@@ -8,6 +8,7 @@ interface Props {
   targetText: string
   studentText: string
   onRetry?: () => void
+  onStartDrill?: () => void
 }
 
 function ScoreRing({ score, label, size = 'lg' }: { score: number; label: string; size?: 'lg' | 'sm' }) {
@@ -55,7 +56,7 @@ const PACE_LABELS: Record<string, { label: string; color: string }> = {
   'too-fast': { label: 'Too Fast', color: 'text-red-500' },
 }
 
-export default function FeedbackDisplay({ assessment, pronunciation, targetText, studentText, onRetry }: Props) {
+export default function FeedbackDisplay({ assessment, pronunciation, targetText, studentText, onRetry, onStartDrill }: Props) {
   const mainScore = pronunciation?.overall_score ?? assessment.accuracy_score
   const mainLabel =
     mainScore >= 90 ? 'Amazing!' :
@@ -166,6 +167,23 @@ export default function FeedbackDisplay({ assessment, pronunciation, targetText,
             ))}
           </ul>
         </section>
+      )}
+
+      {/* Drill CTA */}
+      {onStartDrill && ((pronunciation?.mispronounced && pronunciation.mispronounced.length > 0) ||
+        (assessment.mispronounced_words && assessment.mispronounced_words.length > 0)) && (
+        <div className="flex justify-center">
+          <button
+            onClick={onStartDrill}
+            className="flex items-center gap-2 px-6 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl font-bold text-sm transition-all active:scale-95 shadow-md"
+          >
+            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+            Practice These Words
+          </button>
+        </div>
       )}
 
       {/* Text comparison (collapsed if pronunciation available) */}
