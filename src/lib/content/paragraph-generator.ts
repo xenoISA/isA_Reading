@@ -19,35 +19,35 @@ const DIFFICULTY_GUIDELINES: Record<number, string> = {
   1: `Level 1 (K1-K2, age 5-7):
 - Use very simple, short sentences (5-10 words each)
 - Only basic vocabulary (common everyday words)
-- 3 paragraphs, each 2-3 sentences
+- 2-3 paragraphs, each 3-4 sentences (minimum 50 words per paragraph)
 - Keywords should be simple but worth learning (colors, animals, actions)
 - Total: 50-80 words`,
 
   2: `Level 2 (G1-G2, age 7-8):
 - Use simple sentences with some compound sentences
 - Common vocabulary with a few new words
-- 4 paragraphs, each 2-4 sentences
+- 3-4 paragraphs, each 3-5 sentences (minimum 50 words per paragraph)
 - Keywords should be grade-appropriate vocabulary
 - Total: 80-120 words`,
 
   3: `Level 3 (G3-G4, age 9-10):
 - Use varied sentence structures
 - Intermediate vocabulary, introduce topic-specific terms
-- 5 paragraphs, each 3-5 sentences
+- 4-5 paragraphs, each 3-6 sentences (minimum 50 words per paragraph)
 - Keywords should challenge but not frustrate
 - Total: 130-180 words`,
 
   4: `Level 4 (G5-G6, age 11-12):
 - Use complex sentences with subordinate clauses
 - Advanced vocabulary, domain-specific terminology
-- 6 paragraphs, each 3-6 sentences
+- 4-6 paragraphs, each 4-7 sentences (minimum 60 words per paragraph)
 - Keywords should expand academic vocabulary
 - Total: 200-260 words`,
 
   5: `Level 5 (G7+, age 13+):
 - Use sophisticated sentence structures and transitions
 - Challenging vocabulary, abstract concepts
-- 7 paragraphs, each 4-7 sentences
+- 5-7 paragraphs, each 5-8 sentences (minimum 70 words per paragraph)
 - Keywords should be college-prep level vocabulary
 - Total: 300-400 words`,
 }
@@ -77,6 +77,7 @@ CONTENT QUALITY RULES:
 - Each paragraph should flow naturally to the next
 - Include sensory details and concrete examples
 - NO violence, scary content, or inappropriate themes
+- IMPORTANT: Each paragraph MUST be at least 3 sentences and 50 words long. Merge short paragraphs rather than creating many tiny ones.
 
 {title_instruction}
 
