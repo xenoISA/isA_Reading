@@ -178,54 +178,61 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
       {/* === Recording === */}
       {state === 'recording' && (
         <>
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full animate-pulse-ring" />
-            <button
-              onClick={handleStop}
-              aria-label="Stop recording"
-              className="relative size-24 sm:size-28 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200 text-white transition-all active:scale-95"
-            >
-              <svg className="size-10 sm:size-12" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="text-center space-y-1">
-            <p className="text-red-500 font-mono text-2xl font-bold tabular-nums">
-              {formatTime(duration)}
-            </p>
-            <p className="text-sm text-muted">Reading... tap to stop when done</p>
-          </div>
-
-          {/* Session controls — visible during recording */}
-          {(onPause || onStartOver) && (
-            <div className="flex gap-3 w-full max-w-xs">
-              {onPause && (
+          <div className="flex items-center justify-center gap-6">
+            {/* Pause — left circle */}
+            {onPause ? (
+              <div className="flex flex-col items-center gap-2">
                 <button
                   onClick={() => handleCancel(onPause)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                  aria-label="Pause reading"
+                  className="size-14 sm:size-16 rounded-full flex items-center justify-center border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground shadow-sm transition-all active:scale-95"
                 >
-                  <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="size-6" fill="currentColor" viewBox="0 0 24 24">
                     <rect x="6" y="4" width="4" height="16" rx="1" />
                     <rect x="14" y="4" width="4" height="16" rx="1" />
                   </svg>
-                  Pause
                 </button>
-              )}
-              {onStartOver && (
+                <span className="text-[10px] font-semibold text-muted">Pause</span>
+              </div>
+            ) : <div className="size-14 sm:size-16" />}
+
+            {/* Stop — center circle (main) */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full animate-pulse-ring" />
+                <button
+                  onClick={handleStop}
+                  aria-label="Stop recording"
+                  className="relative size-24 sm:size-28 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200 text-white transition-all active:scale-95"
+                >
+                  <svg className="size-10 sm:size-12" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-red-500 font-mono text-xl font-bold tabular-nums">
+                {formatTime(duration)}
+              </p>
+            </div>
+
+            {/* Start Over — right circle */}
+            {onStartOver ? (
+              <div className="flex flex-col items-center gap-2">
                 <button
                   onClick={() => handleCancel(onStartOver)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                  aria-label="Start over"
+                  className="size-14 sm:size-16 rounded-full flex items-center justify-center border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground shadow-sm transition-all active:scale-95"
                 >
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Start Over
                 </button>
-              )}
-            </div>
-          )}
+                <span className="text-[10px] font-semibold text-muted">Restart</span>
+              </div>
+            ) : <div className="size-14 sm:size-16" />}
+          </div>
+
+          <p className="text-sm text-muted text-center">Reading... tap stop when done</p>
         </>
       )}
 

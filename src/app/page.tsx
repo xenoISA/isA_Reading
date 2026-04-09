@@ -382,8 +382,9 @@ export default function Home() {
   }, [])
 
   const handlePauseReading = useCallback(() => {
-    // Session already auto-saved via useEffect
-    setStep('select')
+    // Return to reading view of current paragraph (session auto-saved via useEffect)
+    setParagraphStep('reading')
+    setStep('read')
   }, [])
 
   const handleStartOver = useCallback(() => {
