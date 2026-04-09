@@ -241,8 +241,9 @@ export default function Home() {
       ])
 
       // Process pronunciation (non-blocking)
+      let pronResult: PronunciationResult | null = null
       if (pronounceRes?.ok) {
-        const pronResult = await pronounceRes.json()
+        pronResult = await pronounceRes.json()
         setPronunciation(pronResult)
       }
 
@@ -272,6 +273,18 @@ export default function Home() {
         }
         return updated
       })
+
+      // Auto-add mispronounced words to spaced rep queue
+      try {
+        const { addWordsToQueue } = await import('@/lib/growth/spaced-rep')
+        const wordsToQueue: { word: string; tip: string }[] = []
+        if (pronResult?.mispronounced) {
+          for (const m of pronResult.mispronounced) {
+            if (m.word.length > 1) wordsToQueue.push({ word: m.word, tip: m.tip })
+          }
+        }
+        if (wordsToQueue.length > 0) addWordsToQueue(wordsToQueue)
+      } catch { /* non-critical */ }
 
       setParagraphStep('feedback')
       setStep('feedback')
@@ -313,6 +326,17 @@ export default function Home() {
   }, [pronunciation, assessment])
 
   const handleDrillComplete = useCallback(async (results: { word: string; attempts: number; bestScore: number; passed: boolean }[]) => {
+    // Add failed words to spaced rep queue
+    try {
+      const { addWordsToQueue } = await import('@/lib/growth/spaced-rep')
+      const failedWords = results
+        .filter(r => !r.passed)
+        .map(r => ({ word: r.word, tip: `Score: ${r.bestScore}%` }))
+      if (failedWords.length > 0) {
+        addWordsToQueue(failedWords)
+      }
+    } catch { /* spaced rep not critical */ }
+
     setStep('feedback')
     setDrillWords([])
   }, [])
