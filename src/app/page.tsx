@@ -383,6 +383,17 @@ export default function Home() {
     setStep('drill')
   }, [])
 
+  const handleQuickReview = useCallback(() => {
+    import('@/lib/growth/spaced-rep').then(({ getDueWords }) => {
+      const due = getDueWords().slice(0, 5)
+      if (due.length > 0) {
+        setDrillWords(due.map(d => ({ word: d.word, tip: d.tip })))
+        setDrillOrigin('wordbank')
+        setStep('drill')
+      }
+    }).catch(() => {})
+  }, [])
+
   const handleNextParagraph = useCallback(() => {
     setCurrentParagraph(prev => prev + 1)
     setAssessment(null)
@@ -517,7 +528,7 @@ export default function Home() {
 
         {/* === Dashboard === */}
         {step === 'dashboard' && (
-          <Dashboard onStartReading={() => setStep('select')} />
+          <Dashboard onStartReading={() => setStep('select')} onQuickReview={handleQuickReview} />
         )}
 
         {/* === Word Bank === */}
@@ -542,6 +553,8 @@ export default function Home() {
               selected={material}
               preferredThemes={preferredThemes}
               savedMaterialId={savedMaterialId}
+              readingLevel={child?.reading_level}
+              avgAccuracy={0}
             />
           </div>
         )}

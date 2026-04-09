@@ -13,7 +13,7 @@ const ERROR_PATTERN_CONFIG: Record<string, { icon: string; label: string; bg: st
   other: { icon: '📝', label: 'Other', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
 }
 
-export default function Dashboard({ onStartReading }: { onStartReading: () => void }) {
+export default function Dashboard({ onStartReading, onQuickReview }: { onStartReading: () => void; onQuickReview?: () => void }) {
   const { child } = useAuth()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [badges, setBadges] = useState<Badge[]>([])
@@ -114,6 +114,23 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
         <StatCard value={metrics?.current_streak || 0} label="Day Streak" color="orange" />
         <StatCard value={metrics?.total_points || 0} label="Points" color="amber" />
       </div>
+
+      {/* Quick Review — streak protection */}
+      {onQuickReview && vocabStats && vocabStats.due > 0 && (metrics?.current_streak || 0) > 0 && (
+        <button
+          onClick={onQuickReview}
+          className="w-full p-4 rounded-2xl bg-orange-50 border-2 border-orange-200 flex items-center gap-3 transition-all active:scale-[0.98]"
+        >
+          <span className="text-3xl">🛡️</span>
+          <div className="flex-1 text-left">
+            <p className="font-bold text-orange-700 text-sm">Keep your {metrics?.current_streak}-day streak!</p>
+            <p className="text-xs text-orange-600">Quick review — {Math.min(vocabStats.due, 5)} words, ~2 min</p>
+          </div>
+          <svg className="size-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
 
       {/* Vocabulary */}
       <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center gap-3">
