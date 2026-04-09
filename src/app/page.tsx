@@ -86,6 +86,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
   const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
+  const [improvement, setImprovement] = useState<{ previousBest: number; delta: number } | null>(null)
 
   const handleThemesComplete = useCallback((themes: Theme[]) => {
     setPreferredThemes(themes)
@@ -416,6 +417,21 @@ export default function Home() {
     ? Math.round(paragraphProgress.reduce((sum, p) => sum + (p.accuracy_score || 0), 0) / completedParagraphs)
     : 0
 
+  // Save reading history when all paragraphs complete
+  useEffect(() => {
+    if (!material || completedParagraphs < totalParagraphs || totalParagraphs === 0) return
+
+    import('@/lib/reading-history').then(({ saveAttempt, getImprovement }) => {
+      const scores = paragraphProgress.map(p => p.accuracy_score || 0)
+
+      // Check improvement BEFORE saving (so we compare with previous attempts)
+      const imp = getImprovement(material.id, averageScore)
+      setImprovement(imp)
+
+      saveAttempt(material.id, material.title, scores)
+    }).catch(() => {})
+  }, [completedParagraphs, totalParagraphs, material, paragraphProgress, averageScore])
+
   // Auth gate: show login if Supabase configured and not logged in
   if (authLoading) {
     return (
@@ -572,6 +588,11 @@ export default function Home() {
                 <p className="text-3xl">🎉</p>
                 <p className="text-lg font-bold text-green-700">All paragraphs complete!</p>
                 <p className="text-sm text-green-600">Average score: {averageScore}%</p>
+                {improvement && (
+                  <p className={`text-sm font-semibold ${improvement.delta >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                    {improvement.delta >= 0 ? '\u2191' : '\u2193'} {Math.abs(improvement.delta)}% vs previous best ({improvement.previousBest}%)
+                  </p>
+                )}
                 <button
                   onClick={handleNewMaterial}
                   className="mt-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold transition-all active:scale-95"

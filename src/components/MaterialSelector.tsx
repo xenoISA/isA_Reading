@@ -27,6 +27,7 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes, 
   const [theme, setTheme] = useState<Theme | null>(null)
   const [loading, setLoading] = useState(true)
   const [recommendations, setRecommendations] = useState<{ material: Material; reason: string }[]>([])
+  const [materialScores, setMaterialScores] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -65,6 +66,17 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes, 
       setRecommendations(recs)
     }).catch(() => {})
   }, [materials, readingLevel, avgAccuracy, preferredThemes])
+
+  useEffect(() => {
+    import('@/lib/reading-history').then(({ getPreviousBest }) => {
+      const scores = new Map<string, number>()
+      for (const m of materials) {
+        const best = getPreviousBest(m.id)
+        if (best !== null) scores.set(m.id, best)
+      }
+      setMaterialScores(scores)
+    }).catch(() => {})
+  }, [materials])
 
   const themeIcon = (t: Theme) => THEMES.find(th => th.key === t)?.icon || '📖'
 
@@ -228,6 +240,11 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes, 
                           <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
                             <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                             Resume reading
+                          </span>
+                        )}
+                        {materialScores.has(m.id) && (
+                          <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+                            Best: {materialScores.get(m.id)}%
                           </span>
                         )}
                       </div>
