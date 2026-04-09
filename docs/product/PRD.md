@@ -42,19 +42,27 @@ Word Bank page with vocabulary list, Leitner box visualization, search/filter, t
 
 ---
 
-## Planned: Smart Recommendations, Progress Visualization, Engagement (Epic #23)
+### Smart Recommendations, Progress, Engagement (Shipped, Epic #23)
+Smart material recommendations, level progress bar + celebrations, streak protection via quick review, actionable error patterns, re-read improvement tracking.
 
-### 6.1 Smart Material Recommendations (P0, #24)
-"Recommended for You" section in MaterialSelector. Factors in reading level, accuracy trends, error patterns, theme diversity. Level-up nudges when accuracy >85%.
+---
 
-### 6.2 Level Progress Bar + Celebrations (P0, #25)
-Visual progress bar toward next level in Dashboard. Level-up celebration modal. Tappable badge details showing earned date and progress.
+## Planned: Personalized Onboarding + Calibration Read (Epic #31)
 
-### 6.3 Streak Protection via Quick Review (P1, #26)
-"Quick Review" button on Dashboard — review 5 due vocab words to maintain streak on busy days. Distinguishes "read today" vs "reviewed today".
+### 7.1 Profile Setup Screen (P0, #32)
+Welcome screen with display name, avatar picker (8-10 options), grade selection (K-8). First onboarding step after signup.
 
-### 6.4 Actionable Error Patterns (P1, #27)
-Tap an error pattern category on Dashboard → launches targeted drill with words from that category.
+### 7.2 Grade-to-Level Mapping + Reading Goal (P0, #33)
+Map grade to estimated reading level (K/1→L1, 2/3→L2, 4/5→L3, 6/7→L4, 8+→L5). Add "I want to..." goal picker to ThemePicker.
 
-### 6.5 Re-read Comparison (P2, #28)
-Track reading history per material. Show previous score on material cards. Completion screen shows improvement delta. Dashboard shows trend arrows for re-reads.
+### 7.3 Calibration Read (P0, #34)
+Auto-select passage at estimated level after theme selection. Run first paragraph through assessment. Adjust level: up if >85%, down if <50%. Silent placement — feels like first activity, not a test.
+
+### 7.4 Celebration Screen (P0, #35)
+Level reveal with confetti animation, calibration score, first_reading badge earned. "Start Reading!" CTA.
+
+### 7.5 Onboarding Flow Wiring (P0, #36)
+New step machine: profile → themes → calibrate → celebrate → select. Returning users skip. BottomNav hidden during onboarding.
+
+---
+
