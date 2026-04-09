@@ -13,8 +13,10 @@ import DrillMode from '@/components/DrillMode'
 import Dashboard from '@/components/Dashboard'
 import BottomNav from '@/components/BottomNav'
 import WordBank from '@/components/WordBank'
+import ProfileSetup from '@/components/ProfileSetup'
+import OnboardingCelebration from '@/components/OnboardingCelebration'
 
-type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'drill' | 'wordbank' | 'dashboard'
+type Step = 'profile' | 'themes' | 'calibrate' | 'celebrate' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'drill' | 'wordbank' | 'dashboard'
 type ParagraphStep = 'reading' | 'recording' | 'processing' | 'feedback'
 
 function speakWithBrowser(text: string) {
@@ -26,8 +28,9 @@ function speakWithBrowser(text: string) {
 
 // Map outer step to StepIndicator step
 function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing' | 'feedback' {
-  if (step === 'themes' || step === 'dashboard' || step === 'wordbank') return 'select'
+  if (step === 'themes' || step === 'dashboard' || step === 'wordbank' || step === 'profile' || step === 'celebrate') return 'select'
   if (step === 'drill') return 'feedback'
+  if (step === 'calibrate') return 'read'
   return step
 }
 
@@ -69,7 +72,17 @@ function clearSession() {
 export default function Home() {
   const { child, loading: authLoading, logout } = useAuth()
   const [skipAuth, setSkipAuth] = useState(false)
-  const [step, setStep] = useState<Step>('themes')
+  const [isOnboarded, setIsOnboarded] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem('isa-reading-onboarded') === 'true'
+  })
+  const [step, setStep] = useState<Step>(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('isa-reading-onboarded') !== 'true') return 'profile'
+    return 'themes'
+  })
+  const [calibrationScore, setCalibrationScore] = useState(0)
+  const [calibratedLevel, setCalibratedLevel] = useState(1)
+  const [onboardingGrade, setOnboardingGrade] = useState<string | null>(null)
   const [newBadgePopup, setNewBadgePopup] = useState<BadgeKey | null>(null)
   const [levelUpPopup, setLevelUpPopup] = useState<number | null>(null)
   const [preferredThemes, setPreferredThemes] = useState<Theme[]>([])
@@ -89,8 +102,26 @@ export default function Home() {
   const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
   const [improvement, setImprovement] = useState<{ previousBest: number; delta: number } | null>(null)
 
-  const handleThemesComplete = useCallback((themes: Theme[]) => {
+  const handleThemesComplete = useCallback((themes: Theme[], _goal?: string) => {
     setPreferredThemes(themes)
+    if (!isOnboarded) {
+      setStep('calibrate')
+    } else {
+      setStep('select')
+    }
+  }, [isOnboarded])
+
+  const handleProfileComplete = useCallback((data: { displayName: string; avatar: string; grade: string }) => {
+    setOnboardingGrade(data.grade)
+    localStorage.setItem('isa-reading-grade', data.grade)
+    localStorage.setItem('isa-reading-avatar', data.avatar)
+    localStorage.setItem('isa-reading-display-name', data.displayName)
+    setStep('themes')
+  }, [])
+
+  const handleCelebrationComplete = useCallback(() => {
+    localStorage.setItem('isa-reading-onboarded', 'true')
+    setIsOnboarded(true)
     setStep('select')
   }, [])
 
@@ -436,6 +467,67 @@ export default function Home() {
     setStep('themes')
   }, [])
 
+  // Auto-select material for calibration
+  useEffect(() => {
+    if (step !== 'calibrate' || material) return
+
+    const grade = onboardingGrade || localStorage.getItem('isa-reading-grade') || '1'
+    const estimatedLevel = (() => {
+      switch (grade) { case 'K': case '1': return 1; case '2': case '3': return 2; case '4': case '5': return 3; case '6': case '7': return 4; default: return 5 }
+    })()
+
+    fetch(`/api/materials?difficulty=${estimatedLevel}`)
+      .then(r => r.json())
+      .then((materials: Material[]) => {
+        if (materials.length === 0) {
+          return fetch('/api/materials?difficulty=1').then(r => r.json())
+        }
+        return materials
+      })
+      .then((materials: Material[]) => {
+        if (materials.length === 0) return
+        const pick = materials[Math.floor(Math.random() * materials.length)]
+        setMaterial(pick)
+        setCurrentParagraph(0)
+        setParagraphStep('reading')
+        const progress: ParagraphProgress[] = [{ paragraph_index: 0, status: 'pending' as const }]
+        setParagraphProgress(progress)
+        setCalibratedLevel(estimatedLevel)
+      })
+      .catch(console.error)
+  }, [step, material, onboardingGrade])
+
+  // Auto-advance from calibration feedback to celebration
+  useEffect(() => {
+    if (step !== 'feedback' || isOnboarded) return
+
+    const timer = setTimeout(() => {
+      const score = assessment?.accuracy_score || 0
+      setCalibrationScore(score)
+
+      const grade = onboardingGrade || localStorage.getItem('isa-reading-grade') || '1'
+      let level = (() => {
+        switch (grade) { case 'K': case '1': return 1; case '2': case '3': return 2; case '4': case '5': return 3; case '6': case '7': return 4; default: return 5 }
+      })()
+
+      if (score >= 85 && level < 5) level++
+      else if (score < 50 && level > 1) level--
+
+      setCalibratedLevel(level)
+      localStorage.setItem('isa-reading-level', String(level))
+
+      setStep('celebrate')
+      setMaterial(null)
+      setAssessment(null)
+      setPronunciation(null)
+      setStudentText('')
+      setParagraphProgress([])
+      setCurrentParagraph(0)
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [step, isOnboarded, assessment, onboardingGrade])
+
   // Calculate overall progress
   const completedParagraphs = paragraphProgress.filter(p => p.status === 'completed').length
   const totalParagraphs = material?.paragraphs?.length || 0
@@ -516,7 +608,7 @@ export default function Home() {
             isA Reading
           </button>
           <div className="flex items-center gap-3">
-            {step !== 'themes' && step !== 'select' && step !== 'dashboard' && step !== 'wordbank' && (
+            {isOnboarded && step !== 'themes' && step !== 'select' && step !== 'dashboard' && step !== 'wordbank' && (
               <button
                 onClick={handleNewMaterial}
                 className="text-sm text-muted hover:text-foreground transition-colors font-medium"
@@ -524,7 +616,7 @@ export default function Home() {
                 Change
               </button>
             )}
-            {step === 'select' && (
+            {isOnboarded && step === 'select' && (
               <button
                 onClick={handleChangeThemes}
                 className="text-sm text-muted hover:text-foreground transition-colors font-medium"
@@ -536,8 +628,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Step indicator — only for reading flow steps */}
-      {step !== 'themes' && step !== 'dashboard' && step !== 'drill' && step !== 'wordbank' && (
+      {/* Step indicator — only for reading flow steps, hidden during onboarding */}
+      {isOnboarded && step !== 'themes' && step !== 'dashboard' && step !== 'drill' && step !== 'wordbank' && (
         <StepIndicator currentStep={toIndicatorStep(step)} />
       )}
 
@@ -560,9 +652,26 @@ export default function Home() {
           <WordBank onStartReview={handleWordBankDrill} />
         )}
 
+        {/* === Profile Setup (onboarding) === */}
+        {step === 'profile' && (
+          <ProfileSetup
+            initialName={child?.display_name || child?.username || ''}
+            onComplete={handleProfileComplete}
+          />
+        )}
+
         {/* === Theme Picker === */}
         {step === 'themes' && (
           <ThemePicker onComplete={handleThemesComplete} />
+        )}
+
+        {/* === Celebration (onboarding) === */}
+        {step === 'celebrate' && (
+          <OnboardingCelebration
+            level={calibratedLevel}
+            score={calibrationScore}
+            onComplete={handleCelebrationComplete}
+          />
         )}
 
         {/* === Select Material === */}
@@ -584,21 +693,28 @@ export default function Home() {
         )}
 
         {/* === Reading Flow (paragraph by paragraph) === */}
-        {(step === 'read' || step === 'record' || step === 'processing' || step === 'feedback' || step === 'drill') && material && (
+        {(step === 'read' || step === 'record' || step === 'processing' || step === 'feedback' || step === 'drill' || step === 'calibrate') && material && (
           <div className="space-y-4">
-            {/* Material title + progress */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground">{material.title}</h2>
-              {completedParagraphs > 0 && (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600">
-                  {completedParagraphs}/{totalParagraphs} done
-                  {averageScore > 0 && ` · ${averageScore}%`}
-                </span>
-              )}
-            </div>
+            {/* Material title + progress (or calibration header) */}
+            {!isOnboarded ? (
+              <div className="text-center mb-2">
+                <h2 className="text-xl font-bold text-foreground">Let&apos;s hear you read!</h2>
+                <p className="text-sm text-muted mt-1">Read this short passage aloud</p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">{material.title}</h2>
+                {completedParagraphs > 0 && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600">
+                    {completedParagraphs}/{totalParagraphs} done
+                    {averageScore > 0 && ` · ${averageScore}%`}
+                  </span>
+                )}
+              </div>
+            )}
 
             <ParagraphReader
-              paragraphs={material.paragraphs || [{ index: 0, text: material.content, keywords: [] }]}
+              paragraphs={!isOnboarded ? [material.paragraphs[0] || { index: 0, text: material.content, keywords: [] }] : (material.paragraphs || [{ index: 0, text: material.content, keywords: [] }])}
               currentIndex={currentParagraph}
               progress={paragraphProgress}
               step={paragraphStep}
@@ -649,8 +765,8 @@ export default function Home() {
         )}
       </main>
 
-      {/* Bottom navigation — only when logged in */}
-      {child && (
+      {/* Bottom navigation — only when logged in and onboarded */}
+      {child && isOnboarded && (
         <BottomNav
           activeTab={step === 'dashboard' ? 'dashboard' : step === 'wordbank' ? 'wordbank' : 'read'}
           onTabChange={(tab) => {
