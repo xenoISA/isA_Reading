@@ -5,6 +5,19 @@ interface PointsResult {
   breakdown: { points: number; reason: string }[]
 }
 
+export function calculateDrillPoints(currentStreak: number): PointsResult {
+  const breakdown: { points: number; reason: string }[] = []
+
+  breakdown.push({ points: 5, reason: 'drill_complete' })
+
+  if (currentStreak > 0) {
+    breakdown.push({ points: 3, reason: 'streak_bonus' })
+  }
+
+  const total = breakdown.reduce((sum, b) => sum + b.points, 0)
+  return { total, breakdown }
+}
+
 export function calculatePoints(accuracyScore: number, currentStreak: number): PointsResult {
   const breakdown: { points: number; reason: string }[] = []
 

@@ -11,6 +11,7 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
   const [badges, setBadges] = useState<Badge[]>([])
   const [loading, setLoading] = useState(true)
   const [vocabStats, setVocabStats] = useState<{ total: number; due: number; mastered: number } | null>(null)
+  const [drillsCompleted, setDrillsCompleted] = useState(0)
 
   useEffect(() => {
     fetch('/api/growth')
@@ -28,6 +29,12 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
     import('@/lib/growth/spaced-rep').then(({ getQueueStats }) => {
       setVocabStats(getQueueStats())
     }).catch(() => {})
+
+    // Load drill completion count
+    try {
+      const count = parseInt(localStorage.getItem('isa-reading-drills-completed') || '0', 10)
+      setDrillsCompleted(count)
+    } catch {}
   }, [])
 
   if (loading) {
@@ -97,6 +104,17 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
               <p className="text-lg font-bold text-green-600 tabular-nums">{vocabStats.mastered}</p>
               <p className="text-[10px] text-green-500">Mastered</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drill stats */}
+      {drillsCompleted > 0 && (
+        <div className="p-4 rounded-2xl bg-pink-50 border border-pink-200 flex items-center gap-3">
+          <span className="text-3xl">🏋️</span>
+          <div>
+            <p className="font-bold text-pink-700">{drillsCompleted} drills completed</p>
+            <p className="text-xs text-pink-600">Practice makes perfect!</p>
           </div>
         </div>
       )}

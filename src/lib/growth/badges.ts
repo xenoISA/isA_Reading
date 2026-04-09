@@ -9,6 +9,7 @@ interface BadgeCheckContext {
   latestAccuracy: number
   avgAccuracy: number
   themesRead: string[]
+  drillsCompleted: number
 }
 
 type BadgeRule = {
@@ -25,9 +26,10 @@ const BADGE_RULES: BadgeRule[] = [
   { key: 'theme_explorer', check: (ctx) => ctx.themesRead.length >= 8 },
   { key: 'speedster', check: (ctx) => ctx.totalPoints >= 50 },
   { key: 'accuracy_hero', check: (ctx) => ctx.totalReadings >= 10 && ctx.avgAccuracy >= 90 },
+  { key: 'drill_master', check: (ctx) => ctx.drillsCompleted >= 10 },
 ]
 
-export async function checkAndAwardBadges(childId: string): Promise<BadgeKey[]> {
+export async function checkAndAwardBadges(childId: string, drillsCompleted?: number): Promise<BadgeKey[]> {
   const supabase = getSupabaseClient()
 
   // Get existing badges
@@ -75,6 +77,7 @@ export async function checkAndAwardBadges(childId: string): Promise<BadgeKey[]> 
     latestAccuracy,
     avgAccuracy,
     themesRead,
+    drillsCompleted: drillsCompleted || 0,
   }
 
   // Check each badge rule

@@ -337,6 +337,13 @@ export default function Home() {
       }
     } catch { /* spaced rep not critical */ }
 
+    // Track drill completion count
+    try {
+      const drillCountKey = 'isa-reading-drills-completed'
+      const count = parseInt(localStorage.getItem(drillCountKey) || '0', 10)
+      localStorage.setItem(drillCountKey, String(count + 1))
+    } catch {}
+
     setStep('feedback')
     setDrillWords([])
   }, [])

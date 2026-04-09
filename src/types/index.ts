@@ -185,6 +185,7 @@ export type BadgeKey =
   | 'theme_explorer'
   | 'speedster'
   | 'accuracy_hero'
+  | 'drill_master'
 
 export const BADGE_DEFS: Record<BadgeKey, { name: string; icon: string; description: string }> = {
   first_reading: { name: 'First Steps', icon: '📖', description: 'Complete your first reading' },
@@ -195,6 +196,7 @@ export const BADGE_DEFS: Record<BadgeKey, { name: string; icon: string; descript
   theme_explorer: { name: 'Explorer', icon: '🗺️', description: 'Read from all 8 themes' },
   speedster: { name: 'Speedster', icon: '🚀', description: 'Earn 50 points' },
   accuracy_hero: { name: 'Accuracy Hero', icon: '🎯', description: 'Average 90%+ across 10 readings' },
+  drill_master: { name: 'Drill Master', icon: '🏋️', description: 'Complete 10 pronunciation drills' },
 }
 
 export interface GrowthMetrics {
@@ -205,6 +207,7 @@ export interface GrowthMetrics {
   longest_streak: number
   total_points: number
   vocabulary_learned: number
+  drills_completed?: number
   accuracy_trend: { date: string; score: number }[]
   recent_readings: { date: string; title: string; score: number; material_id: string }[]
 }
