@@ -381,29 +381,6 @@ export default function Home() {
     setError(null)
   }, [])
 
-  const handlePauseReading = useCallback(() => {
-    // Return to reading view of current paragraph (session auto-saved via useEffect)
-    setParagraphStep('reading')
-    setStep('read')
-  }, [])
-
-  const handleStartOver = useCallback(() => {
-    if (!material) return
-    clearSession()
-    setCurrentParagraph(0)
-    setParagraphStep('reading')
-    setAssessment(null)
-    setPronunciation(null)
-    setStudentText('')
-    setError(null)
-    const progress: ParagraphProgress[] = (material.paragraphs || []).map((_, i) => ({
-      paragraph_index: i,
-      status: 'pending' as const,
-    }))
-    setParagraphProgress(progress)
-    setStep('read')
-  }, [material])
-
   const handleChangeThemes = useCallback(() => {
     localStorage.removeItem('isa-reading-themes')
     setStep('themes')
@@ -547,8 +524,6 @@ export default function Home() {
               onRetryParagraph={handleRetryParagraph}
               onNextParagraph={handleNextParagraph}
               onPrevParagraph={handlePrevParagraph}
-              onPauseReading={handlePauseReading}
-              onStartOver={handleStartOver}
               onStartDrill={handleStartDrill}
             />
 

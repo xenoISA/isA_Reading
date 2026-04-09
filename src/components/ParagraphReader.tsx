@@ -21,8 +21,6 @@ interface Props {
   onRetryParagraph: () => void
   onNextParagraph: () => void
   onPrevParagraph: () => void
-  onPauseReading?: () => void
-  onStartOver?: () => void
   onStartDrill?: () => void
 }
 
@@ -95,8 +93,6 @@ export default function ParagraphReader({
   onRetryParagraph,
   onNextParagraph,
   onPrevParagraph,
-  onPauseReading,
-  onStartOver,
   onStartDrill,
 }: Props) {
   const paragraph = paragraphs[currentIndex]
@@ -194,11 +190,7 @@ export default function ParagraphReader({
               <HighlightedText text={paragraph.text} keywords={paragraph.keywords} />
             </p>
           </div>
-          <AudioRecorder
-            onRecordingComplete={onRecordingComplete}
-            onPause={onPauseReading}
-            onStartOver={onStartOver}
-          />
+          <AudioRecorder onRecordingComplete={onRecordingComplete} />
         </>
       )}
 

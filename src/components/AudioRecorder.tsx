@@ -5,13 +5,11 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 interface Props {
   onRecordingComplete: (blob: Blob) => void
   disabled?: boolean
-  onPause?: () => void
-  onStartOver?: () => void
 }
 
-type RecorderState = 'idle' | 'countdown' | 'recording' | 'done'
+type RecorderState = 'idle' | 'countdown' | 'recording' | 'paused' | 'done'
 
-export default function AudioRecorder({ onRecordingComplete, disabled, onPause, onStartOver }: Props) {
+export default function AudioRecorder({ onRecordingComplete, disabled }: Props) {
   const [state, setState] = useState<RecorderState>('idle')
   const [countdown, setCountdown] = useState(3)
   const [duration, setDuration] = useState(0)
@@ -27,7 +25,6 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
     if (state !== 'countdown') return
 
     if (countdown <= 0) {
-      // Start actual recording
       startActualRecording()
       return
     }
@@ -57,7 +54,6 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
     mediaRecorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop())
       streamRef.current = null
-      // If cancelled (pause/startover), don't trigger assessment
       if (cancelledRef.current) return
       const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
       const url = URL.createObjectURL(blob)
@@ -77,11 +73,8 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
 
   const handleStart = useCallback(async () => {
     try {
-      // Get mic access first
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-
-      // Start countdown
       setCountdown(3)
       setAudioUrl(null)
       setState('countdown')
@@ -98,25 +91,52 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
     }
   }, [])
 
-  // Stop recording without triggering assessment, then call action
-  const handleCancel = useCallback((action: () => void) => {
+  const handlePause = useCallback(() => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.pause()
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      setState('paused')
+    }
+  }, [])
+
+  const handleResume = useCallback(() => {
+    if (mediaRecorderRef.current?.state === 'paused') {
+      mediaRecorderRef.current.resume()
+      timerRef.current = setInterval(() => {
+        setDuration(d => d + 1)
+      }, 1000)
+      setState('recording')
+    }
+  }, [])
+
+  const handleRestart = useCallback(() => {
+    // Discard current recording, start fresh
     cancelledRef.current = true
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop()
+    const recorder = mediaRecorderRef.current
+    if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+      recorder.stop()
     } else {
-      // Clean up stream if not recording
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
-    action()
+    mediaRecorderRef.current = null
+    chunksRef.current = []
+    setDuration(0)
+    setAudioUrl(null)
+    setState('idle')
   }, [])
 
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+
+  const isActive = state === 'recording' || state === 'paused'
 
   return (
     <div className="flex flex-col items-center gap-6 py-6">
@@ -175,31 +195,43 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
         </>
       )}
 
-      {/* === Recording === */}
-      {state === 'recording' && (
+      {/* === Recording / Paused — three circle controls === */}
+      {isActive && (
         <>
           <div className="flex items-center justify-center gap-6">
-            {/* Pause — left circle */}
-            {onPause ? (
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={() => handleCancel(onPause)}
-                  aria-label="Pause reading"
-                  className="size-14 sm:size-16 rounded-full flex items-center justify-center border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground shadow-sm transition-all active:scale-95"
-                >
+            {/* Pause / Resume — left circle */}
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={state === 'paused' ? handleResume : handlePause}
+                aria-label={state === 'paused' ? 'Resume recording' : 'Pause recording'}
+                className={`size-14 sm:size-16 rounded-full flex items-center justify-center shadow-sm transition-all active:scale-95 ${
+                  state === 'paused'
+                    ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-200'
+                    : 'border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground'
+                }`}
+              >
+                {state === 'paused' ? (
+                  <svg className="size-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                ) : (
                   <svg className="size-6" fill="currentColor" viewBox="0 0 24 24">
                     <rect x="6" y="4" width="4" height="16" rx="1" />
                     <rect x="14" y="4" width="4" height="16" rx="1" />
                   </svg>
-                </button>
-                <span className="text-[10px] font-semibold text-muted">Pause</span>
-              </div>
-            ) : <div className="size-14 sm:size-16" />}
+                )}
+              </button>
+              <span className="text-[10px] font-semibold text-muted">
+                {state === 'paused' ? 'Resume' : 'Pause'}
+              </span>
+            </div>
 
             {/* Stop — center circle (main) */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full animate-pulse-ring" />
+                {state === 'recording' && (
+                  <div className="absolute inset-0 rounded-full animate-pulse-ring" />
+                )}
                 <button
                   onClick={handleStop}
                   aria-label="Stop recording"
@@ -210,29 +242,29 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
                   </svg>
                 </button>
               </div>
-              <p className="text-red-500 font-mono text-xl font-bold tabular-nums">
+              <p className={`font-mono text-xl font-bold tabular-nums ${state === 'paused' ? 'text-amber-500' : 'text-red-500'}`}>
                 {formatTime(duration)}
               </p>
             </div>
 
-            {/* Start Over — right circle */}
-            {onStartOver ? (
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={() => handleCancel(onStartOver)}
-                  aria-label="Start over"
-                  className="size-14 sm:size-16 rounded-full flex items-center justify-center border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground shadow-sm transition-all active:scale-95"
-                >
-                  <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-                <span className="text-[10px] font-semibold text-muted">Restart</span>
-              </div>
-            ) : <div className="size-14 sm:size-16" />}
+            {/* Restart — right circle */}
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={handleRestart}
+                aria-label="Restart recording"
+                className="size-14 sm:size-16 rounded-full flex items-center justify-center border-2 border-border bg-surface hover:bg-surface-alt text-muted hover:text-foreground shadow-sm transition-all active:scale-95"
+              >
+                <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <span className="text-[10px] font-semibold text-muted">Restart</span>
+            </div>
           </div>
 
-          <p className="text-sm text-muted text-center">Reading... tap stop when done</p>
+          <p className="text-sm text-muted text-center">
+            {state === 'paused' ? 'Paused — tap resume to continue' : 'Reading... tap stop when done'}
+          </p>
         </>
       )}
 
