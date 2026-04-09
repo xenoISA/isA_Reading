@@ -5,11 +5,13 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 interface Props {
   onRecordingComplete: (blob: Blob) => void
   disabled?: boolean
+  onPause?: () => void
+  onStartOver?: () => void
 }
 
 type RecorderState = 'idle' | 'countdown' | 'recording' | 'done'
 
-export default function AudioRecorder({ onRecordingComplete, disabled }: Props) {
+export default function AudioRecorder({ onRecordingComplete, disabled, onPause, onStartOver }: Props) {
   const [state, setState] = useState<RecorderState>('idle')
   const [countdown, setCountdown] = useState(3)
   const [duration, setDuration] = useState(0)
@@ -174,6 +176,35 @@ export default function AudioRecorder({ onRecordingComplete, disabled }: Props) 
             </p>
             <p className="text-sm text-muted">Reading... tap to stop when done</p>
           </div>
+
+          {/* Session controls — visible during recording */}
+          {(onPause || onStartOver) && (
+            <div className="flex gap-3 w-full max-w-xs">
+              {onPause && (
+                <button
+                  onClick={onPause}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                >
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
+                  Pause
+                </button>
+              )}
+              {onStartOver && (
+                <button
+                  onClick={onStartOver}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                >
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Start Over
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
 
