@@ -20,6 +20,7 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const cancelledRef = useRef(false)
 
   // Countdown effect
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
     })
 
     chunksRef.current = []
+    cancelledRef.current = false
     mediaRecorderRef.current = mediaRecorder
 
     mediaRecorder.ondataavailable = (e) => {
@@ -53,13 +55,15 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
     }
 
     mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+      // If cancelled (pause/startover), don't trigger assessment
+      if (cancelledRef.current) return
       const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
       const url = URL.createObjectURL(blob)
       setAudioUrl(url)
       setState('done')
       onRecordingComplete(blob)
-      stream.getTracks().forEach(t => t.stop())
-      streamRef.current = null
     }
 
     mediaRecorder.start(100)
@@ -92,6 +96,23 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
       clearInterval(timerRef.current)
       timerRef.current = null
     }
+  }, [])
+
+  // Stop recording without triggering assessment, then call action
+  const handleCancel = useCallback((action: () => void) => {
+    cancelledRef.current = true
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    } else {
+      // Clean up stream if not recording
+      streamRef.current?.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+    }
+    action()
   }, [])
 
   const formatTime = (s: number) =>
@@ -182,7 +203,7 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
             <div className="flex gap-3 w-full max-w-xs">
               {onPause && (
                 <button
-                  onClick={onPause}
+                  onClick={() => handleCancel(onPause)}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
                 >
                   <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
@@ -194,7 +215,7 @@ export default function AudioRecorder({ onRecordingComplete, disabled, onPause, 
               )}
               {onStartOver && (
                 <button
-                  onClick={onStartOver}
+                  onClick={() => handleCancel(onStartOver)}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
                 >
                   <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
