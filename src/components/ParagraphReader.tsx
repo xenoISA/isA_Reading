@@ -109,34 +109,9 @@ export default function ParagraphReader({
       {/* Paragraph progress dots + controls */}
       <div className="space-y-2">
         <ParagraphNav total={paragraphs.length} current={currentIndex} progress={progress} />
-        <div className="flex items-center justify-between">
-          {onStartOver ? (
-            <button
-              onClick={onStartOver}
-              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-border bg-surface text-muted hover:text-foreground hover:border-border-active transition-all font-medium"
-            >
-              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Start over
-            </button>
-          ) : <div />}
-          <p className="text-center text-xs text-muted">
-            Paragraph {currentIndex + 1} of {paragraphs.length}
-          </p>
-          {onPauseReading ? (
-            <button
-              onClick={onPauseReading}
-              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-border bg-surface text-muted hover:text-foreground hover:border-border-active transition-all font-medium"
-            >
-              <svg className="size-3" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-              Pause
-            </button>
-          ) : <div />}
-        </div>
+        <p className="text-center text-xs text-muted">
+          Paragraph {currentIndex + 1} of {paragraphs.length}
+        </p>
       </div>
 
       {/* === Reading step === */}
@@ -161,31 +136,61 @@ export default function ParagraphReader({
           )}
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={onPlayParagraph}
-              disabled={ttsLoading || ttsPlaying}
-              className="flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white rounded-2xl font-bold text-base transition-all active:scale-95"
-            >
-              {ttsLoading ? (
-                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={onPlayParagraph}
+                disabled={ttsLoading || ttsPlaying}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white rounded-2xl font-bold text-base transition-all active:scale-95"
+              >
+                {ttsLoading ? (
+                  <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                  </svg>
+                )}
+                <span>{ttsPlaying ? 'Playing...' : 'Listen'}</span>
+              </button>
+              <button
+                onClick={onStartRecording}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold text-base transition-all active:scale-95"
+              >
                 <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
                 </svg>
-              )}
-              <span>{ttsPlaying ? 'Playing...' : 'Listen'}</span>
-            </button>
-            <button
-              onClick={onStartRecording}
-              className="flex-1 flex items-center justify-center gap-2 px-5 py-4 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold text-base transition-all active:scale-95"
-            >
-              <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-              </svg>
-              <span>Read This Paragraph</span>
-            </button>
+                <span>Read This Paragraph</span>
+              </button>
+            </div>
+            {/* Session controls */}
+            {(onPauseReading || onStartOver) && (
+              <div className="flex gap-3">
+                {onPauseReading && (
+                  <button
+                    onClick={onPauseReading}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                  >
+                    <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                    Pause
+                  </button>
+                )}
+                {onStartOver && (
+                  <button
+                    onClick={onStartOver}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                  >
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Start Over
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Paragraph navigation */}
@@ -220,6 +225,34 @@ export default function ParagraphReader({
             </p>
           </div>
           <AudioRecorder onRecordingComplete={onRecordingComplete} />
+          {/* Session controls during recording */}
+          {(onPauseReading || onStartOver) && (
+            <div className="flex gap-3">
+              {onPauseReading && (
+                <button
+                  onClick={onPauseReading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                >
+                  <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
+                  Pause
+                </button>
+              )}
+              {onStartOver && (
+                <button
+                  onClick={onStartOver}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-border bg-surface hover:bg-surface-alt text-foreground rounded-2xl font-semibold text-sm transition-all active:scale-95"
+                >
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Start Over
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
 
