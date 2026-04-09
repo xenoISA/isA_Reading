@@ -34,7 +34,7 @@
     "difficulty": 1,
     "theme": "animals",
     "domain": "animals",
-    "word_count": 62
+    "word_count": 51
   },
   {
     "id": "daily-life-1-1",
@@ -72,33 +72,26 @@
     "difficulty": 1,
     "theme": "daily-life",
     "domain": "daily-life",
-    "word_count": 68
+    "word_count": 54
   },
   {
     "id": "nature-1-1",
     "title": "The Little Flower",
-    "content": "There is a little flower in my garden. It is yellow and pretty.\n\nThe flower needs water and sunshine. I water it every day. The flower grows taller.\n\nA butterfly visits the flower. It has blue wings. The butterfly and the flower are friends.",
+    "content": "There is a little flower in my garden. It is yellow and pretty. The flower needs water and sunshine. I water it every day. The flower grows taller.\n\nA butterfly visits the flower. It has blue wings. The butterfly and the flower are friends.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "There is a little flower in my garden. It is yellow and pretty.",
+        "text": "There is a little flower in my garden. It is yellow and pretty. The flower needs water and sunshine. I water it every day. The flower grows taller.",
         "keywords": [
           "flower",
           "garden",
-          "pretty"
+          "pretty",
+          "water",
+          "sunshine"
         ]
       },
       {
         "index": 1,
-        "text": "The flower needs water and sunshine. I water it every day. The flower grows taller.",
-        "keywords": [
-          "water",
-          "sunshine",
-          "grows"
-        ]
-      },
-      {
-        "index": 2,
         "text": "A butterfly visits the flower. It has blue wings. The butterfly and the flower are friends.",
         "keywords": [
           "butterfly",
@@ -110,55 +103,40 @@
     "difficulty": 1,
     "theme": "nature",
     "domain": "nature",
-    "word_count": 55
+    "word_count": 44
   },
   {
     "id": "animals-2-1",
     "title": "The Clever Fox",
-    "content": "One day, a fox walked through the forest. The fox was hungry and wanted to find food.\n\nThe fox saw a tall tree with grapes at the top. The grapes were purple and looked delicious. The fox jumped and jumped but could not reach them.\n\nThe fox tried to climb the tree. But the trunk was too smooth. His paws kept sliding down.\n\n\"Those grapes are probably sour anyway,\" said the fox, and walked away. Sometimes we say things are bad when we cannot have them.",
+    "content": "One day, a fox walked through the forest. The fox was hungry and wanted to find food. The fox saw a tall tree with grapes at the top. The grapes were purple and looked delicious. The fox jumped and jumped but could not reach them.\n\nThe fox tried to climb the tree. But the trunk was too smooth. His paws kept sliding down. \"Those grapes are probably sour anyway,\" said the fox, and walked away. Sometimes we say things are bad when we cannot have them.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "One day, a fox walked through the forest. The fox was hungry and wanted to find food.",
+        "text": "One day, a fox walked through the forest. The fox was hungry and wanted to find food. The fox saw a tall tree with grapes at the top. The grapes were purple and looked delicious. The fox jumped and jumped but could not reach them.",
         "keywords": [
           "forest",
-          "hungry"
+          "hungry",
+          "grapes",
+          "purple",
+          "delicious"
         ]
       },
       {
         "index": 1,
-        "text": "The fox saw a tall tree with grapes at the top. The grapes were purple and looked delicious. The fox jumped and jumped but could not reach them.",
-        "keywords": [
-          "grapes",
-          "purple",
-          "delicious",
-          "reach"
-        ]
-      },
-      {
-        "index": 2,
-        "text": "The fox tried to climb the tree. But the trunk was too smooth. His paws kept sliding down.",
+        "text": "The fox tried to climb the tree. But the trunk was too smooth. His paws kept sliding down. \"Those grapes are probably sour anyway,\" said the fox, and walked away. Sometimes we say things are bad when we cannot have them.",
         "keywords": [
           "climb",
           "trunk",
           "smooth",
-          "sliding"
-        ]
-      },
-      {
-        "index": 3,
-        "text": "\"Those grapes are probably sour anyway,\" said the fox, and walked away. Sometimes we say things are bad when we cannot have them.",
-        "keywords": [
-          "probably",
-          "sour",
-          "anyway"
+          "sliding",
+          "probably"
         ]
       }
     ],
     "difficulty": 2,
     "theme": "animals",
     "domain": "animals",
-    "word_count": 95
+    "word_count": 86
   },
   {
     "id": "adventure-2-1",
@@ -205,58 +183,45 @@
     "difficulty": 2,
     "theme": "adventure",
     "domain": "adventure",
-    "word_count": 110
+    "word_count": 93
   },
   {
     "id": "fantasy-2-1",
     "title": "The Magic Paintbrush",
-    "content": "A girl named Mia found a special paintbrush. Whatever she painted became real.\n\nMia painted a beautiful red bird. The bird came to life and flew around the room. Mia was amazed.\n\nNext, she painted a plate of cookies. The cookies appeared on the table. They smelled wonderful and tasted even better.\n\nMia decided to use the paintbrush to help people. She painted warm coats for those who were cold, and food for those who were hungry.",
+    "content": "A girl named Mia found a special paintbrush. Whatever she painted became real. Mia painted a beautiful red bird. The bird came to life and flew around the room. Mia was amazed.\n\nNext, she painted a plate of cookies. The cookies appeared on the table. They smelled wonderful and tasted even better. Mia decided to use the paintbrush to help people. She painted warm coats for those who were cold, and food for those who were hungry.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "A girl named Mia found a special paintbrush. Whatever she painted became real.",
+        "text": "A girl named Mia found a special paintbrush. Whatever she painted became real. Mia painted a beautiful red bird. The bird came to life and flew around the room. Mia was amazed.",
         "keywords": [
           "special",
-          "paintbrush"
-        ]
-      },
-      {
-        "index": 1,
-        "text": "Mia painted a beautiful red bird. The bird came to life and flew around the room. Mia was amazed.",
-        "keywords": [
+          "paintbrush",
           "beautiful",
           "flew",
           "amazed"
         ]
       },
       {
-        "index": 2,
-        "text": "Next, she painted a plate of cookies. The cookies appeared on the table. They smelled wonderful and tasted even better.",
+        "index": 1,
+        "text": "Next, she painted a plate of cookies. The cookies appeared on the table. They smelled wonderful and tasted even better. Mia decided to use the paintbrush to help people. She painted warm coats for those who were cold, and food for those who were hungry.",
         "keywords": [
           "appeared",
           "wonderful",
-          "tasted"
-        ]
-      },
-      {
-        "index": 3,
-        "text": "Mia decided to use the paintbrush to help people. She painted warm coats for those who were cold, and food for those who were hungry.",
-        "keywords": [
+          "tasted",
           "decided",
-          "coats",
-          "hungry"
+          "coats"
         ]
       }
     ],
     "difficulty": 2,
     "theme": "fantasy",
     "domain": "fantasy",
-    "word_count": 85
+    "word_count": 77
   },
   {
     "id": "science-3-1",
     "title": "How Rainbows Form",
-    "content": "Have you ever seen a rainbow after the rain? Rainbows are one of nature's most beautiful displays. They appear when sunlight and rain work together.\n\nSunlight looks white, but it is actually made up of many colors. When sunlight passes through raindrops, the light bends and separates into different colors. This process is called refraction.\n\nThe colors of a rainbow always appear in the same order: red, orange, yellow, green, blue, indigo, and violet. You can remember them using the name Roy G. Biv.\n\nRainbows are actually full circles, but we usually only see half because the ground blocks the other half. If you are on a mountain or in an airplane, you might see a complete circle.\n\nNext time it rains, look toward the sky opposite the sun. You might be lucky enough to spot a rainbow!",
+    "content": "Have you ever seen a rainbow after the rain? Rainbows are one of nature's most beautiful displays. They appear when sunlight and rain work together.\n\nSunlight looks white, but it is actually made up of many colors. When sunlight passes through raindrops, the light bends and separates into different colors. This process is called refraction.\n\nThe colors of a rainbow always appear in the same order: red, orange, yellow, green, blue, indigo, and violet. You can remember them using the name Roy G. Biv.\n\nRainbows are actually full circles, but we usually only see half because the ground blocks the other half. If you are on a mountain or in an airplane, you might see a complete circle. Next time it rains, look toward the sky opposite the sun. You might be lucky enough to spot a rainbow!",
     "paragraphs": [
       {
         "index": 0,
@@ -287,112 +252,72 @@
       },
       {
         "index": 3,
-        "text": "Rainbows are actually full circles, but we usually only see half because the ground blocks the other half. If you are on a mountain or in an airplane, you might see a complete circle.",
+        "text": "Rainbows are actually full circles, but we usually only see half because the ground blocks the other half. If you are on a mountain or in an airplane, you might see a complete circle. Next time it rains, look toward the sky opposite the sun. You might be lucky enough to spot a rainbow!",
         "keywords": [
           "circles",
           "blocks",
-          "complete"
-        ]
-      },
-      {
-        "index": 4,
-        "text": "Next time it rains, look toward the sky opposite the sun. You might be lucky enough to spot a rainbow!",
-        "keywords": [
+          "complete",
           "opposite",
-          "lucky",
-          "spot"
+          "lucky"
         ]
       }
     ],
     "difficulty": 3,
     "theme": "science",
     "domain": "science",
-    "word_count": 150
+    "word_count": 138
   },
   {
     "id": "history-3-1",
     "title": "The Ancient Egyptians",
-    "content": "Thousands of years ago, a great civilization lived along the River Nile in Egypt. The ancient Egyptians built some of the most incredible structures in history.\n\nThe most famous structures are the pyramids. The Great Pyramid of Giza was built as a tomb for the pharaoh. It took thousands of workers many years to build it using enormous stone blocks.\n\nThe Egyptians also created a writing system called hieroglyphics. They used pictures and symbols to write messages. These messages told stories about their gods, kings, and daily life.\n\nEgyptian society was well organized. Pharaohs ruled the land, priests served the gods, scribes kept records, and farmers grew crops along the fertile banks of the Nile.\n\nToday, we can still visit Egypt and see the pyramids and temples they built. The ancient Egyptians left behind a legacy that continues to fascinate people around the world.",
+    "content": "Thousands of years ago, a great civilization lived along the River Nile in Egypt. The ancient Egyptians built some of the most incredible structures in history. The most famous structures are the pyramids. The Great Pyramid of Giza was built as a tomb for the pharaoh. It took thousands of workers many years to build it using enormous stone blocks.\n\nThe Egyptians also created a writing system called hieroglyphics. They used pictures and symbols to write messages. These messages told stories about their gods, kings, and daily life. Egyptian society was well organized. Pharaohs ruled the land, priests served the gods, scribes kept records, and farmers grew crops along the fertile banks of the Nile. Today, we can still visit Egypt and see the pyramids and temples they built. The ancient Egyptians left behind a legacy that continues to fascinate people around the world.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "Thousands of years ago, a great civilization lived along the River Nile in Egypt. The ancient Egyptians built some of the most incredible structures in history.",
+        "text": "Thousands of years ago, a great civilization lived along the River Nile in Egypt. The ancient Egyptians built some of the most incredible structures in history. The most famous structures are the pyramids. The Great Pyramid of Giza was built as a tomb for the pharaoh. It took thousands of workers many years to build it using enormous stone blocks.",
         "keywords": [
           "civilization",
           "ancient",
           "incredible",
-          "structures"
+          "structures",
+          "pyramids"
         ]
       },
       {
         "index": 1,
-        "text": "The most famous structures are the pyramids. The Great Pyramid of Giza was built as a tomb for the pharaoh. It took thousands of workers many years to build it using enormous stone blocks.",
-        "keywords": [
-          "pyramids",
-          "tomb",
-          "pharaoh",
-          "enormous"
-        ]
-      },
-      {
-        "index": 2,
-        "text": "The Egyptians also created a writing system called hieroglyphics. They used pictures and symbols to write messages. These messages told stories about their gods, kings, and daily life.",
+        "text": "The Egyptians also created a writing system called hieroglyphics. They used pictures and symbols to write messages. These messages told stories about their gods, kings, and daily life. Egyptian society was well organized. Pharaohs ruled the land, priests served the gods, scribes kept records, and farmers grew crops along the fertile banks of the Nile. Today, we can still visit Egypt and see the pyramids and temples they built. The ancient Egyptians left behind a legacy that continues to fascinate people around the world.",
         "keywords": [
           "hieroglyphics",
           "symbols",
-          "messages"
-        ]
-      },
-      {
-        "index": 3,
-        "text": "Egyptian society was well organized. Pharaohs ruled the land, priests served the gods, scribes kept records, and farmers grew crops along the fertile banks of the Nile.",
-        "keywords": [
+          "messages",
           "society",
-          "organized",
-          "scribes",
-          "fertile"
-        ]
-      },
-      {
-        "index": 4,
-        "text": "Today, we can still visit Egypt and see the pyramids and temples they built. The ancient Egyptians left behind a legacy that continues to fascinate people around the world.",
-        "keywords": [
-          "temples",
-          "legacy",
-          "fascinate"
+          "organized"
         ]
       }
     ],
     "difficulty": 3,
     "theme": "history",
     "domain": "history",
-    "word_count": 160
+    "word_count": 144
   },
   {
     "id": "sports-3-1",
     "title": "The Soccer Match",
-    "content": "It was the final game of the season, and both teams were nervous. The stadium was packed with cheering fans waving colorful flags.\n\nThe referee blew the whistle and the match began. Both teams played with great energy and determination. The ball moved quickly from one end of the field to the other.\n\nIn the first half, neither team could score. The goalkeepers made several amazing saves. The defenders tackled hard and cleared the ball away from danger.\n\nAt halftime, the coaches gave their teams encouraging speeches. \"Believe in yourselves,\" said Coach Martinez. \"Play as a team and the goals will come.\"\n\nWith five minutes left, a young player named Carlos received the ball near the goal. He took a deep breath, aimed carefully, and kicked. The ball flew into the top corner of the net. The crowd erupted in celebration!",
+    "content": "It was the final game of the season, and both teams were nervous. The stadium was packed with cheering fans waving colorful flags. The referee blew the whistle and the match began. Both teams played with great energy and determination. The ball moved quickly from one end of the field to the other.\n\nIn the first half, neither team could score. The goalkeepers made several amazing saves. The defenders tackled hard and cleared the ball away from danger.\n\nAt halftime, the coaches gave their teams encouraging speeches. \"Believe in yourselves,\" said Coach Martinez. \"Play as a team and the goals will come.\"\n\nWith five minutes left, a young player named Carlos received the ball near the goal. He took a deep breath, aimed carefully, and kicked. The ball flew into the top corner of the net. The crowd erupted in celebration!",
     "paragraphs": [
       {
         "index": 0,
-        "text": "It was the final game of the season, and both teams were nervous. The stadium was packed with cheering fans waving colorful flags.",
+        "text": "It was the final game of the season, and both teams were nervous. The stadium was packed with cheering fans waving colorful flags. The referee blew the whistle and the match began. Both teams played with great energy and determination. The ball moved quickly from one end of the field to the other.",
         "keywords": [
           "season",
           "stadium",
-          "cheering"
+          "cheering",
+          "referee",
+          "whistle"
         ]
       },
       {
         "index": 1,
-        "text": "The referee blew the whistle and the match began. Both teams played with great energy and determination. The ball moved quickly from one end of the field to the other.",
-        "keywords": [
-          "referee",
-          "whistle",
-          "determination"
-        ]
-      },
-      {
-        "index": 2,
         "text": "In the first half, neither team could score. The goalkeepers made several amazing saves. The defenders tackled hard and cleared the ball away from danger.",
         "keywords": [
           "goalkeepers",
@@ -402,7 +327,7 @@
         ]
       },
       {
-        "index": 3,
+        "index": 2,
         "text": "At halftime, the coaches gave their teams encouraging speeches. \"Believe in yourselves,\" said Coach Martinez. \"Play as a team and the goals will come.\"",
         "keywords": [
           "halftime",
@@ -412,7 +337,7 @@
         ]
       },
       {
-        "index": 4,
+        "index": 3,
         "text": "With five minutes left, a young player named Carlos received the ball near the goal. He took a deep breath, aimed carefully, and kicked. The ball flew into the top corner of the net. The crowd erupted in celebration!",
         "keywords": [
           "received",
@@ -425,53 +350,37 @@
     "difficulty": 3,
     "theme": "sports",
     "domain": "sports",
-    "word_count": 165
+    "word_count": 141
   },
   {
     "id": "nature-4-1",
     "title": "The Journey of a Salmon",
-    "content": "Every year, millions of salmon make one of the most remarkable journeys in the animal kingdom. These incredible fish travel thousands of miles from the ocean back to the rivers where they were born.\n\nSalmon begin their lives as tiny eggs buried in gravel at the bottom of freshwater streams. When they hatch, the young fish, called fry, spend their first months learning to swim and finding food in the shallow water.\n\nAs they grow larger, the young salmon travel downstream toward the ocean. This journey can take weeks or even months. Along the way, they face many dangers including predators like bears, eagles, and larger fish.\n\nOnce they reach the ocean, salmon spend several years growing strong in the salty water. They feed on smaller fish and develop the strength they will need for their return journey.\n\nWhen the time comes to reproduce, something extraordinary happens. The salmon navigate thousands of miles back to the exact stream where they were born. Scientists believe they use their sense of smell and Earth's magnetic field to find their way.\n\nThe return journey upstream is exhausting. Salmon must swim against powerful currents, leap over waterfalls, and avoid predators. Many do not survive the trip, but those that do lay their eggs in the same gravel where their own lives began.",
+    "content": "Every year, millions of salmon make one of the most remarkable journeys in the animal kingdom. These incredible fish travel thousands of miles from the ocean back to the rivers where they were born. Salmon begin their lives as tiny eggs buried in gravel at the bottom of freshwater streams. When they hatch, the young fish, called fry, spend their first months learning to swim and finding food in the shallow water.\n\nAs they grow larger, the young salmon travel downstream toward the ocean. This journey can take weeks or even months. Along the way, they face many dangers including predators like bears, eagles, and larger fish. Once they reach the ocean, salmon spend several years growing strong in the salty water. They feed on smaller fish and develop the strength they will need for their return journey.\n\nWhen the time comes to reproduce, something extraordinary happens. The salmon navigate thousands of miles back to the exact stream where they were born. Scientists believe they use their sense of smell and Earth's magnetic field to find their way.\n\nThe return journey upstream is exhausting. Salmon must swim against powerful currents, leap over waterfalls, and avoid predators. Many do not survive the trip, but those that do lay their eggs in the same gravel where their own lives began.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "Every year, millions of salmon make one of the most remarkable journeys in the animal kingdom. These incredible fish travel thousands of miles from the ocean back to the rivers where they were born.",
+        "text": "Every year, millions of salmon make one of the most remarkable journeys in the animal kingdom. These incredible fish travel thousands of miles from the ocean back to the rivers where they were born. Salmon begin their lives as tiny eggs buried in gravel at the bottom of freshwater streams. When they hatch, the young fish, called fry, spend their first months learning to swim and finding food in the shallow water.",
         "keywords": [
           "salmon",
           "remarkable",
           "journeys",
-          "kingdom"
+          "kingdom",
+          "buried"
         ]
       },
       {
         "index": 1,
-        "text": "Salmon begin their lives as tiny eggs buried in gravel at the bottom of freshwater streams. When they hatch, the young fish, called fry, spend their first months learning to swim and finding food in the shallow water.",
+        "text": "As they grow larger, the young salmon travel downstream toward the ocean. This journey can take weeks or even months. Along the way, they face many dangers including predators like bears, eagles, and larger fish. Once they reach the ocean, salmon spend several years growing strong in the salty water. They feed on smaller fish and develop the strength they will need for their return journey.",
         "keywords": [
-          "buried",
-          "gravel",
-          "freshwater",
-          "hatch"
+          "downstream",
+          "predators",
+          "dangers",
+          "salty",
+          "develop"
         ]
       },
       {
         "index": 2,
-        "text": "As they grow larger, the young salmon travel downstream toward the ocean. This journey can take weeks or even months. Along the way, they face many dangers including predators like bears, eagles, and larger fish.",
-        "keywords": [
-          "downstream",
-          "predators",
-          "dangers"
-        ]
-      },
-      {
-        "index": 3,
-        "text": "Once they reach the ocean, salmon spend several years growing strong in the salty water. They feed on smaller fish and develop the strength they will need for their return journey.",
-        "keywords": [
-          "salty",
-          "develop",
-          "strength"
-        ]
-      },
-      {
-        "index": 4,
         "text": "When the time comes to reproduce, something extraordinary happens. The salmon navigate thousands of miles back to the exact stream where they were born. Scientists believe they use their sense of smell and Earth's magnetic field to find their way.",
         "keywords": [
           "reproduce",
@@ -481,7 +390,7 @@
         ]
       },
       {
-        "index": 5,
+        "index": 3,
         "text": "The return journey upstream is exhausting. Salmon must swim against powerful currents, leap over waterfalls, and avoid predators. Many do not survive the trip, but those that do lay their eggs in the same gravel where their own lives began.",
         "keywords": [
           "exhausting",
@@ -494,7 +403,7 @@
     "difficulty": 4,
     "theme": "nature",
     "domain": "nature",
-    "word_count": 230
+    "word_count": 218
   },
   {
     "id": "adventure-4-1",
@@ -564,35 +473,26 @@
     "difficulty": 4,
     "theme": "adventure",
     "domain": "adventure",
-    "word_count": 255
+    "word_count": 243
   },
   {
     "id": "science-4-1",
     "title": "The Secret Life of Trees",
-    "content": "Beneath the surface of every forest lies a hidden network that scientists call the \"Wood Wide Web.\" This underground system connects trees to one another through a partnership between tree roots and tiny fungi.\n\nThe fungi wrap around or penetrate the tree roots, forming structures called mycorrhizae. Through this connection, the fungi help trees absorb water and essential minerals from the soil. In return, the trees provide the fungi with sugars produced through photosynthesis.\n\nBut the most fascinating discovery is that trees use this network to communicate with each other. When a tree is attacked by insects, it can send chemical signals through the fungal network to warn neighboring trees. The warned trees then produce defensive chemicals before the insects arrive.\n\nResearchers have found that mother trees — the largest, oldest trees in the forest — play a special role. They send extra nutrients through the network to younger trees growing in their shade. Some scientists call this \"tree parenting.\"\n\nWhen a tree is dying, it often transfers its remaining nutrients to its neighbors through the network. It is as if the tree knows its resources will be more useful to the living forest than to itself.\n\nThis discovery has changed how we think about forests. They are not collections of individual trees competing for resources, but cooperative communities where trees support each other through an invisible underground internet.",
+    "content": "Beneath the surface of every forest lies a hidden network that scientists call the \"Wood Wide Web.\" This underground system connects trees to one another through a partnership between tree roots and tiny fungi. The fungi wrap around or penetrate the tree roots, forming structures called mycorrhizae. Through this connection, the fungi help trees absorb water and essential minerals from the soil. In return, the trees provide the fungi with sugars produced through photosynthesis.\n\nBut the most fascinating discovery is that trees use this network to communicate with each other. When a tree is attacked by insects, it can send chemical signals through the fungal network to warn neighboring trees. The warned trees then produce defensive chemicals before the insects arrive.\n\nResearchers have found that mother trees — the largest, oldest trees in the forest — play a special role. They send extra nutrients through the network to younger trees growing in their shade. Some scientists call this \"tree parenting.\"\n\nWhen a tree is dying, it often transfers its remaining nutrients to its neighbors through the network. It is as if the tree knows its resources will be more useful to the living forest than to itself. This discovery has changed how we think about forests. They are not collections of individual trees competing for resources, but cooperative communities where trees support each other through an invisible underground internet.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "Beneath the surface of every forest lies a hidden network that scientists call the \"Wood Wide Web.\" This underground system connects trees to one another through a partnership between tree roots and tiny fungi.",
+        "text": "Beneath the surface of every forest lies a hidden network that scientists call the \"Wood Wide Web.\" This underground system connects trees to one another through a partnership between tree roots and tiny fungi. The fungi wrap around or penetrate the tree roots, forming structures called mycorrhizae. Through this connection, the fungi help trees absorb water and essential minerals from the soil. In return, the trees provide the fungi with sugars produced through photosynthesis.",
         "keywords": [
           "network",
           "underground",
           "partnership",
-          "fungi"
+          "fungi",
+          "penetrate"
         ]
       },
       {
         "index": 1,
-        "text": "The fungi wrap around or penetrate the tree roots, forming structures called mycorrhizae. Through this connection, the fungi help trees absorb water and essential minerals from the soil. In return, the trees provide the fungi with sugars produced through photosynthesis.",
-        "keywords": [
-          "penetrate",
-          "mycorrhizae",
-          "absorb",
-          "photosynthesis"
-        ]
-      },
-      {
-        "index": 2,
         "text": "But the most fascinating discovery is that trees use this network to communicate with each other. When a tree is attacked by insects, it can send chemical signals through the fungal network to warn neighboring trees. The warned trees then produce defensive chemicals before the insects arrive.",
         "keywords": [
           "fascinating",
@@ -602,7 +502,7 @@
         ]
       },
       {
-        "index": 3,
+        "index": 2,
         "text": "Researchers have found that mother trees — the largest, oldest trees in the forest — play a special role. They send extra nutrients through the network to younger trees growing in their shade. Some scientists call this \"tree parenting.\"",
         "keywords": [
           "researchers",
@@ -611,57 +511,40 @@
         ]
       },
       {
-        "index": 4,
-        "text": "When a tree is dying, it often transfers its remaining nutrients to its neighbors through the network. It is as if the tree knows its resources will be more useful to the living forest than to itself.",
+        "index": 3,
+        "text": "When a tree is dying, it often transfers its remaining nutrients to its neighbors through the network. It is as if the tree knows its resources will be more useful to the living forest than to itself. This discovery has changed how we think about forests. They are not collections of individual trees competing for resources, but cooperative communities where trees support each other through an invisible underground internet.",
         "keywords": [
           "transfers",
           "remaining",
-          "resources"
-        ]
-      },
-      {
-        "index": 5,
-        "text": "This discovery has changed how we think about forests. They are not collections of individual trees competing for resources, but cooperative communities where trees support each other through an invisible underground internet.",
-        "keywords": [
+          "resources",
           "cooperative",
-          "communities",
-          "competing",
-          "invisible"
+          "communities"
         ]
       }
     ],
     "difficulty": 4,
     "theme": "science",
     "domain": "science",
-    "word_count": 245
+    "word_count": 229
   },
   {
     "id": "science-5-1",
     "title": "The Mysteries of Black Holes",
-    "content": "In the vast expanse of space, few phenomena are as mysterious and awe-inspiring as black holes. These cosmic objects possess gravitational forces so powerful that nothing — not even light itself — can escape their pull once past a boundary known as the event horizon.\n\nBlack holes form when massive stars, typically those with at least twenty times the mass of our Sun, exhaust their nuclear fuel and collapse under their own gravity. The resulting implosion compresses the star's matter into an incredibly dense point called a singularity, where the laws of physics as we understand them break down completely.\n\nThere are several types of black holes. Stellar black holes, formed from collapsed stars, are relatively small — about the size of a city but containing the mass of several suns. Supermassive black holes, found at the centers of most galaxies, are millions to billions of times more massive than our Sun. Scientists are still debating how these enormous objects formed.\n\nOne of the most counterintuitive aspects of black holes is their relationship with time. According to Einstein's theory of general relativity, gravity affects the passage of time. Near a black hole, where gravity is extremely intense, time actually slows down relative to an observer far away. If you could watch someone falling into a black hole, they would appear to slow down and eventually freeze at the event horizon.\n\nIn 2019, the Event Horizon Telescope collaboration achieved something previously thought impossible: they captured the first direct image of a black hole. The image showed a bright ring of superheated gas surrounding a dark shadow — the silhouette of the black hole at the center of galaxy M87, located fifty-five million light-years from Earth.\n\nRecent theoretical work by physicist Stephen Hawking suggested that black holes are not entirely black. Through a quantum mechanical process now called Hawking radiation, black holes slowly emit particles and gradually lose mass over incredibly long periods. Eventually, after trillions upon trillions of years, a black hole could theoretically evaporate entirely.\n\nDespite decades of research, black holes continue to challenge our understanding of the universe. They represent the extreme limits of physics, where quantum mechanics and general relativity collide, and where the answers to some of science's deepest questions may be hidden.",
+    "content": "In the vast expanse of space, few phenomena are as mysterious and awe-inspiring as black holes. These cosmic objects possess gravitational forces so powerful that nothing — not even light itself — can escape their pull once past a boundary known as the event horizon. Black holes form when massive stars, typically those with at least twenty times the mass of our Sun, exhaust their nuclear fuel and collapse under their own gravity. The resulting implosion compresses the star's matter into an incredibly dense point called a singularity, where the laws of physics as we understand them break down completely.\n\nThere are several types of black holes. Stellar black holes, formed from collapsed stars, are relatively small — about the size of a city but containing the mass of several suns. Supermassive black holes, found at the centers of most galaxies, are millions to billions of times more massive than our Sun. Scientists are still debating how these enormous objects formed.\n\nOne of the most counterintuitive aspects of black holes is their relationship with time. According to Einstein's theory of general relativity, gravity affects the passage of time. Near a black hole, where gravity is extremely intense, time actually slows down relative to an observer far away. If you could watch someone falling into a black hole, they would appear to slow down and eventually freeze at the event horizon.\n\nIn 2019, the Event Horizon Telescope collaboration achieved something previously thought impossible: they captured the first direct image of a black hole. The image showed a bright ring of superheated gas surrounding a dark shadow — the silhouette of the black hole at the center of galaxy M87, located fifty-five million light-years from Earth.\n\nRecent theoretical work by physicist Stephen Hawking suggested that black holes are not entirely black. Through a quantum mechanical process now called Hawking radiation, black holes slowly emit particles and gradually lose mass over incredibly long periods. Eventually, after trillions upon trillions of years, a black hole could theoretically evaporate entirely. Despite decades of research, black holes continue to challenge our understanding of the universe. They represent the extreme limits of physics, where quantum mechanics and general relativity collide, and where the answers to some of science's deepest questions may be hidden.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "In the vast expanse of space, few phenomena are as mysterious and awe-inspiring as black holes. These cosmic objects possess gravitational forces so powerful that nothing — not even light itself — can escape their pull once past a boundary known as the event horizon.",
+        "text": "In the vast expanse of space, few phenomena are as mysterious and awe-inspiring as black holes. These cosmic objects possess gravitational forces so powerful that nothing — not even light itself — can escape their pull once past a boundary known as the event horizon. Black holes form when massive stars, typically those with at least twenty times the mass of our Sun, exhaust their nuclear fuel and collapse under their own gravity. The resulting implosion compresses the star's matter into an incredibly dense point called a singularity, where the laws of physics as we understand them break down completely.",
         "keywords": [
           "phenomena",
           "gravitational",
           "cosmic",
-          "horizon"
+          "horizon",
+          "exhaust"
         ]
       },
       {
         "index": 1,
-        "text": "Black holes form when massive stars, typically those with at least twenty times the mass of our Sun, exhaust their nuclear fuel and collapse under their own gravity. The resulting implosion compresses the star's matter into an incredibly dense point called a singularity, where the laws of physics as we understand them break down completely.",
-        "keywords": [
-          "exhaust",
-          "implosion",
-          "singularity",
-          "compresses"
-        ]
-      },
-      {
-        "index": 2,
         "text": "There are several types of black holes. Stellar black holes, formed from collapsed stars, are relatively small — about the size of a city but containing the mass of several suns. Supermassive black holes, found at the centers of most galaxies, are millions to billions of times more massive than our Sun. Scientists are still debating how these enormous objects formed.",
         "keywords": [
           "stellar",
@@ -671,7 +554,7 @@
         ]
       },
       {
-        "index": 3,
+        "index": 2,
         "text": "One of the most counterintuitive aspects of black holes is their relationship with time. According to Einstein's theory of general relativity, gravity affects the passage of time. Near a black hole, where gravity is extremely intense, time actually slows down relative to an observer far away. If you could watch someone falling into a black hole, they would appear to slow down and eventually freeze at the event horizon.",
         "keywords": [
           "counterintuitive",
@@ -681,7 +564,7 @@
         ]
       },
       {
-        "index": 4,
+        "index": 3,
         "text": "In 2019, the Event Horizon Telescope collaboration achieved something previously thought impossible: they captured the first direct image of a black hole. The image showed a bright ring of superheated gas surrounding a dark shadow — the silhouette of the black hole at the center of galaxy M87, located fifty-five million light-years from Earth.",
         "keywords": [
           "collaboration",
@@ -691,57 +574,40 @@
         ]
       },
       {
-        "index": 5,
-        "text": "Recent theoretical work by physicist Stephen Hawking suggested that black holes are not entirely black. Through a quantum mechanical process now called Hawking radiation, black holes slowly emit particles and gradually lose mass over incredibly long periods. Eventually, after trillions upon trillions of years, a black hole could theoretically evaporate entirely.",
+        "index": 4,
+        "text": "Recent theoretical work by physicist Stephen Hawking suggested that black holes are not entirely black. Through a quantum mechanical process now called Hawking radiation, black holes slowly emit particles and gradually lose mass over incredibly long periods. Eventually, after trillions upon trillions of years, a black hole could theoretically evaporate entirely. Despite decades of research, black holes continue to challenge our understanding of the universe. They represent the extreme limits of physics, where quantum mechanics and general relativity collide, and where the answers to some of science's deepest questions may be hidden.",
         "keywords": [
           "theoretical",
           "quantum",
           "radiation",
-          "evaporate"
-        ]
-      },
-      {
-        "index": 6,
-        "text": "Despite decades of research, black holes continue to challenge our understanding of the universe. They represent the extreme limits of physics, where quantum mechanics and general relativity collide, and where the answers to some of science's deepest questions may be hidden.",
-        "keywords": [
-          "decades",
-          "mechanics",
-          "collide",
-          "universe"
+          "evaporate",
+          "decades"
         ]
       }
     ],
     "difficulty": 5,
     "theme": "science",
     "domain": "science",
-    "word_count": 365
+    "word_count": 376
   },
   {
     "id": "history-5-1",
     "title": "The Silk Road: A Bridge Between Worlds",
-    "content": "For nearly two thousand years, a vast network of trade routes connected the civilizations of East and West. Known as the Silk Road, this collection of paths stretched over six thousand kilometers from the ancient Chinese capital of Chang'an to the shores of the Mediterranean Sea.\n\nContrary to popular belief, the Silk Road was not a single road but rather a complex web of interconnected routes that crossed deserts, mountains, and grasslands. Merchants rarely traveled the entire distance themselves. Instead, goods passed through a chain of traders, each covering a portion of the journey, with bustling market towns serving as exchange points.\n\nSilk was the most prized commodity traveling westward, giving the route its modern name. Chinese silk was a luxury that fascinated Roman aristocrats, who would pay extraordinary prices for this lightweight, shimmering fabric. But silk was only one of many goods exchanged. Spices, precious stones, glassware, paper, gunpowder, and ceramics all flowed along these ancient highways.\n\nPerhaps more significant than the material goods were the ideas that traveled the Silk Road. Buddhism spread from India to China and beyond. Islamic scholarship and Greek philosophy mingled in the trading cities of Central Asia. Mathematical concepts, astronomical knowledge, and medical practices crossed cultural boundaries in ways that transformed entire civilizations.\n\nThe journey along the Silk Road was fraught with peril. Travelers faced scorching deserts, treacherous mountain passes, and the constant threat of bandits. Caravans could include hundreds of camels and dozens of armed guards. The legendary Taklamakan Desert, whose name supposedly means \"you go in but you don't come out,\" claimed countless lives over the centuries.\n\nThe Silk Road began to decline in the fifteenth century as maritime trade routes became more efficient and reliable. Portuguese explorers discovered sea passages to Asia, and the great trading cities along the overland routes gradually lost their importance. The Ottoman Empire's control of key segments also hindered European access.\n\nToday, the legacy of the Silk Road endures in the cultural connections it forged. The cuisines, languages, religions, and artistic traditions of countless nations bear the imprint of this remarkable network that, for millennia, served as humanity's most important bridge between civilizations.",
+    "content": "For nearly two thousand years, a vast network of trade routes connected the civilizations of East and West. Known as the Silk Road, this collection of paths stretched over six thousand kilometers from the ancient Chinese capital of Chang'an to the shores of the Mediterranean Sea. Contrary to popular belief, the Silk Road was not a single road but rather a complex web of interconnected routes that crossed deserts, mountains, and grasslands. Merchants rarely traveled the entire distance themselves. Instead, goods passed through a chain of traders, each covering a portion of the journey, with bustling market towns serving as exchange points.\n\nSilk was the most prized commodity traveling westward, giving the route its modern name. Chinese silk was a luxury that fascinated Roman aristocrats, who would pay extraordinary prices for this lightweight, shimmering fabric. But silk was only one of many goods exchanged. Spices, precious stones, glassware, paper, gunpowder, and ceramics all flowed along these ancient highways.\n\nPerhaps more significant than the material goods were the ideas that traveled the Silk Road. Buddhism spread from India to China and beyond. Islamic scholarship and Greek philosophy mingled in the trading cities of Central Asia. Mathematical concepts, astronomical knowledge, and medical practices crossed cultural boundaries in ways that transformed entire civilizations.\n\nThe journey along the Silk Road was fraught with peril. Travelers faced scorching deserts, treacherous mountain passes, and the constant threat of bandits. Caravans could include hundreds of camels and dozens of armed guards. The legendary Taklamakan Desert, whose name supposedly means \"you go in but you don't come out,\" claimed countless lives over the centuries.\n\nThe Silk Road began to decline in the fifteenth century as maritime trade routes became more efficient and reliable. Portuguese explorers discovered sea passages to Asia, and the great trading cities along the overland routes gradually lost their importance. The Ottoman Empire's control of key segments also hindered European access. Today, the legacy of the Silk Road endures in the cultural connections it forged. The cuisines, languages, religions, and artistic traditions of countless nations bear the imprint of this remarkable network that, for millennia, served as humanity's most important bridge between civilizations.",
     "paragraphs": [
       {
         "index": 0,
-        "text": "For nearly two thousand years, a vast network of trade routes connected the civilizations of East and West. Known as the Silk Road, this collection of paths stretched over six thousand kilometers from the ancient Chinese capital of Chang'an to the shores of the Mediterranean Sea.",
+        "text": "For nearly two thousand years, a vast network of trade routes connected the civilizations of East and West. Known as the Silk Road, this collection of paths stretched over six thousand kilometers from the ancient Chinese capital of Chang'an to the shores of the Mediterranean Sea. Contrary to popular belief, the Silk Road was not a single road but rather a complex web of interconnected routes that crossed deserts, mountains, and grasslands. Merchants rarely traveled the entire distance themselves. Instead, goods passed through a chain of traders, each covering a portion of the journey, with bustling market towns serving as exchange points.",
         "keywords": [
           "civilizations",
           "Mediterranean",
-          "vast"
+          "vast",
+          "contrary",
+          "interconnected"
         ]
       },
       {
         "index": 1,
-        "text": "Contrary to popular belief, the Silk Road was not a single road but rather a complex web of interconnected routes that crossed deserts, mountains, and grasslands. Merchants rarely traveled the entire distance themselves. Instead, goods passed through a chain of traders, each covering a portion of the journey, with bustling market towns serving as exchange points.",
-        "keywords": [
-          "contrary",
-          "interconnected",
-          "merchants",
-          "bustling"
-        ]
-      },
-      {
-        "index": 2,
         "text": "Silk was the most prized commodity traveling westward, giving the route its modern name. Chinese silk was a luxury that fascinated Roman aristocrats, who would pay extraordinary prices for this lightweight, shimmering fabric. But silk was only one of many goods exchanged. Spices, precious stones, glassware, paper, gunpowder, and ceramics all flowed along these ancient highways.",
         "keywords": [
           "commodity",
@@ -751,7 +617,7 @@
         ]
       },
       {
-        "index": 3,
+        "index": 2,
         "text": "Perhaps more significant than the material goods were the ideas that traveled the Silk Road. Buddhism spread from India to China and beyond. Islamic scholarship and Greek philosophy mingled in the trading cities of Central Asia. Mathematical concepts, astronomical knowledge, and medical practices crossed cultural boundaries in ways that transformed entire civilizations.",
         "keywords": [
           "scholarship",
@@ -761,7 +627,7 @@
         ]
       },
       {
-        "index": 4,
+        "index": 3,
         "text": "The journey along the Silk Road was fraught with peril. Travelers faced scorching deserts, treacherous mountain passes, and the constant threat of bandits. Caravans could include hundreds of camels and dozens of armed guards. The legendary Taklamakan Desert, whose name supposedly means \"you go in but you don't come out,\" claimed countless lives over the centuries.",
         "keywords": [
           "fraught",
@@ -771,30 +637,21 @@
         ]
       },
       {
-        "index": 5,
-        "text": "The Silk Road began to decline in the fifteenth century as maritime trade routes became more efficient and reliable. Portuguese explorers discovered sea passages to Asia, and the great trading cities along the overland routes gradually lost their importance. The Ottoman Empire's control of key segments also hindered European access.",
+        "index": 4,
+        "text": "The Silk Road began to decline in the fifteenth century as maritime trade routes became more efficient and reliable. Portuguese explorers discovered sea passages to Asia, and the great trading cities along the overland routes gradually lost their importance. The Ottoman Empire's control of key segments also hindered European access. Today, the legacy of the Silk Road endures in the cultural connections it forged. The cuisines, languages, religions, and artistic traditions of countless nations bear the imprint of this remarkable network that, for millennia, served as humanity's most important bridge between civilizations.",
         "keywords": [
           "maritime",
           "efficient",
           "Portuguese",
-          "hindered"
-        ]
-      },
-      {
-        "index": 6,
-        "text": "Today, the legacy of the Silk Road endures in the cultural connections it forged. The cuisines, languages, religions, and artistic traditions of countless nations bear the imprint of this remarkable network that, for millennia, served as humanity's most important bridge between civilizations.",
-        "keywords": [
-          "legacy",
-          "endures",
-          "imprint",
-          "millennia"
+          "hindered",
+          "legacy"
         ]
       }
     ],
     "difficulty": 5,
     "theme": "history",
     "domain": "history",
-    "word_count": 360
+    "word_count": 358
   },
   {
     "id": "animals-2-mnpjyyeq",

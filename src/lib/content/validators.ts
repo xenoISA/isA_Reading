@@ -10,6 +10,7 @@ export interface QualityReport {
   readability: ValidationResult
   keywords: ValidationResult
   safety: ValidationResult
+  paragraphLength: ValidationResult
   overall: { passed: boolean; score: number }
 }
 
@@ -151,6 +152,38 @@ export function validateSafety(text: string): ValidationResult {
   }
 }
 
+// Paragraph length validation
+export function validateParagraphLength(paragraphs: Paragraph[]): ValidationResult {
+  const issues: string[] = []
+  let passedCount = 0
+
+  for (const p of paragraphs) {
+    const sentences = p.text.split(/[.!?]+/).filter(s => s.trim().length > 0)
+    const words = p.text.split(/\s+/).filter(w => w.length > 0)
+    const sentenceCount = sentences.length
+    const wordCount = words.length
+
+    const meetsMinimum = sentenceCount >= 3 || wordCount >= 50
+
+    if (!meetsMinimum) {
+      issues.push(
+        `Paragraph ${p.index + 1}: too short (${sentenceCount} sentence${sentenceCount !== 1 ? 's' : ''}, ${wordCount} words — need at least 3 sentences or 50 words)`
+      )
+    } else {
+      passedCount++
+    }
+  }
+
+  const total = paragraphs.length
+  const score = total > 0 ? Math.round((passedCount / total) * 100) : 100
+
+  return {
+    passed: issues.length === 0,
+    score,
+    issues,
+  }
+}
+
 // Full quality report
 export function validateMaterial(
   text: string,
@@ -160,17 +193,19 @@ export function validateMaterial(
   const readability = validateReadability(text, difficulty)
   const keywords = validateKeywords(paragraphs, difficulty)
   const safety = validateSafety(text)
+  const paragraphLength = validateParagraphLength(paragraphs)
 
   const overallScore = Math.round(
-    (readability.score * 0.3 + keywords.score * 0.4 + safety.score * 0.3)
+    (readability.score * 0.25 + keywords.score * 0.3 + safety.score * 0.25 + paragraphLength.score * 0.2)
   )
 
   return {
     readability,
     keywords,
     safety,
+    paragraphLength,
     overall: {
-      passed: readability.passed && keywords.passed && safety.passed,
+      passed: readability.passed && keywords.passed && safety.passed && paragraphLength.passed,
       score: overallScore,
     },
   }
