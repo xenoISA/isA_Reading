@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useCallback, useRef } from 'react'
 import type { LLMAssessment, PronunciationResult, ErrorCategory } from '@/types'
 
 const ERROR_CATEGORY_CONFIG: Record<ErrorCategory, { icon: string; label: string; bg: string; border: string; text: string }> = {
@@ -65,6 +66,41 @@ const PACE_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 export default function FeedbackDisplay({ assessment, pronunciation, targetText, studentText, onRetry, onStartDrill }: Props) {
+  const [playingWord, setPlayingWord] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const playWord = useCallback(async (word: string, speed: number = 1.0) => {
+    setPlayingWord(word)
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: word, speed }),
+      })
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        if (audioRef.current) { audioRef.current.pause() }
+        const audio = new Audio(url)
+        audioRef.current = audio
+        audio.onended = () => setPlayingWord(null)
+        audio.play()
+      } else {
+        const utterance = new SpeechSynthesisUtterance(word)
+        utterance.lang = 'en-US'
+        utterance.rate = speed * 0.85
+        utterance.onend = () => setPlayingWord(null)
+        speechSynthesis.speak(utterance)
+      }
+    } catch {
+      const utterance = new SpeechSynthesisUtterance(word)
+      utterance.lang = 'en-US'
+      utterance.rate = speed * 0.85
+      utterance.onend = () => setPlayingWord(null)
+      speechSynthesis.speak(utterance)
+    }
+  }, [])
+
   const mainScore = pronunciation?.overall_score ?? assessment.accuracy_score
   const mainLabel =
     mainScore >= 90 ? 'Amazing!' :
@@ -135,7 +171,19 @@ export default function FeedbackDisplay({ assessment, pronunciation, targetText,
                   <div className="space-y-1">
                     {errors.map((e, j) => (
                       <div key={j} className="flex items-start gap-2">
-                        <span className="font-bold text-sm text-foreground shrink-0">{e.word}</span>
+                        <button
+                          onClick={() => playWord(e.word)}
+                          className={`font-bold text-sm text-foreground hover:text-accent shrink-0 flex items-center gap-1 transition-colors ${playingWord === e.word ? 'animate-pulse' : ''}`}
+                        >
+                          {playingWord === e.word ? (
+                            <div className="size-3 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg className="size-3" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                            </svg>
+                          )}
+                          {e.word}
+                        </button>
                         <span className="text-xs text-muted leading-relaxed">{e.tip}</span>
                       </div>
                     ))}
@@ -173,11 +221,27 @@ export default function FeedbackDisplay({ assessment, pronunciation, targetText,
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-rose-600">{w.word}</span>
+                  <button
+                    onClick={() => playWord(w.word)}
+                    className={`flex items-center gap-1.5 font-bold text-rose-600 hover:text-rose-800 transition-colors ${playingWord === w.word ? 'animate-pulse' : ''}`}
+                  >
+                    {playingWord === w.word ? (
+                      <div className="size-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                    ) : (
+                      <svg className="size-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                      </svg>
+                    )}
+                    {w.word}
+                  </button>
                   <span className="text-xs text-muted">→</span>
-                  <span className="text-sm font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded">
+                  <button
+                    onClick={() => playWord(w.word, 0.7)}
+                    className="text-sm font-mono text-green-700 bg-green-50 hover:bg-green-100 px-2 py-0.5 rounded transition-colors cursor-pointer"
+                    title="Tap to hear slowly"
+                  >
                     {w.expected_sounds}
-                  </span>
+                  </button>
                 </div>
                 <p className="text-xs text-muted">{w.tip}</p>
               </div>
