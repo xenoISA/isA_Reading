@@ -13,7 +13,11 @@ const ERROR_PATTERN_CONFIG: Record<string, { icon: string; label: string; bg: st
   other: { icon: '📝', label: 'Other', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
 }
 
-export default function Dashboard({ onStartReading, onQuickReview }: { onStartReading: () => void; onQuickReview?: () => void }) {
+export default function Dashboard({ onStartReading, onQuickReview, onErrorPatternDrill }: {
+  onStartReading: () => void
+  onQuickReview?: () => void
+  onErrorPatternDrill?: (words: { word: string; tip: string }[]) => void
+}) {
   const { child } = useAuth()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [badges, setBadges] = useState<Badge[]>([])
@@ -227,12 +231,27 @@ export default function Dashboard({ onStartReading, onQuickReview }: { onStartRe
             {metrics.error_patterns.map((pattern, i) => {
               const config = ERROR_PATTERN_CONFIG[pattern.category] || ERROR_PATTERN_CONFIG.other
               return (
-                <div key={i} className={`p-3 rounded-xl ${config.bg} border ${config.border}`}>
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (onErrorPatternDrill && pattern.example_words.length > 0) {
+                      onErrorPatternDrill(pattern.example_words.map(w => ({ word: w, tip: `${config.label} practice` })))
+                    }
+                  }}
+                  className={`w-full text-left p-3 rounded-xl ${config.bg} border ${config.border} transition-all active:scale-[0.98]`}
+                >
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-sm font-semibold ${config.text}`}>
                       {config.icon} {config.label}
                     </span>
-                    <span className={`text-xs font-bold ${config.text}`}>{pattern.count}x</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold ${config.text}`}>{pattern.count}x</span>
+                      {onErrorPatternDrill && pattern.example_words.length > 0 && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${config.bg} ${config.text} border ${config.border}`}>
+                          Practice
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {pattern.example_words.map((w, j) => (
@@ -241,7 +260,7 @@ export default function Dashboard({ onStartReading, onQuickReview }: { onStartRe
                       </span>
                     ))}
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>

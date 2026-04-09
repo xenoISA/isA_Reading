@@ -394,6 +394,14 @@ export default function Home() {
     }).catch(() => {})
   }, [])
 
+  const handleErrorPatternDrill = useCallback((words: { word: string; tip: string }[]) => {
+    if (words.length > 0) {
+      setDrillWords(words)
+      setDrillOrigin('wordbank')
+      setStep('drill')
+    }
+  }, [])
+
   const handleNextParagraph = useCallback(() => {
     setCurrentParagraph(prev => prev + 1)
     setAssessment(null)
@@ -528,7 +536,7 @@ export default function Home() {
 
         {/* === Dashboard === */}
         {step === 'dashboard' && (
-          <Dashboard onStartReading={() => setStep('select')} onQuickReview={handleQuickReview} />
+          <Dashboard onStartReading={() => setStep('select')} onQuickReview={handleQuickReview} onErrorPatternDrill={handleErrorPatternDrill} />
         )}
 
         {/* === Word Bank === */}
