@@ -517,6 +517,8 @@ export default function Home() {
               selected={material}
               preferredThemes={preferredThemes}
               savedMaterialId={savedMaterialId}
+              readingLevel={child?.reading_level}
+              avgAccuracy={0}
             />
           </div>
         )}

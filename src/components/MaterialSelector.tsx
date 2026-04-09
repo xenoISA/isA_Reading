@@ -17,13 +17,16 @@ interface Props {
   selected?: Material | null
   preferredThemes?: Theme[]
   savedMaterialId?: string | null
+  readingLevel?: number
+  avgAccuracy?: number
 }
 
-export default function MaterialSelector({ onSelect, selected, preferredThemes, savedMaterialId }: Props) {
+export default function MaterialSelector({ onSelect, selected, preferredThemes, savedMaterialId, readingLevel, avgAccuracy }: Props) {
   const [materials, setMaterials] = useState<Material[]>([])
   const [difficulty, setDifficulty] = useState<number | null>(null)
   const [theme, setTheme] = useState<Theme | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recommendations, setRecommendations] = useState<{ material: Material; reason: string }[]>([])
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -48,6 +51,20 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes, 
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [difficulty, theme, preferredThemes])
+
+  useEffect(() => {
+    if (materials.length === 0) return
+    import('@/lib/recommendations').then(({ getRecommendations, getCompletedMaterialIds }) => {
+      const completedIds = getCompletedMaterialIds()
+      const recs = getRecommendations(materials, {
+        readingLevel: readingLevel || 1,
+        avgAccuracy: avgAccuracy || 0,
+        completedMaterialIds: completedIds,
+        preferredThemes: preferredThemes || [],
+      })
+      setRecommendations(recs)
+    }).catch(() => {})
+  }, [materials, readingLevel, avgAccuracy, preferredThemes])
 
   const themeIcon = (t: Theme) => THEMES.find(th => th.key === t)?.icon || '📖'
 
@@ -128,63 +145,99 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes, 
             </div>
           ))}
         </div>
-      ) : materials.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-4xl mb-3">📚</p>
-          <p className="text-muted font-medium">No readings found</p>
-          <button
-            onClick={() => { setDifficulty(null); setTheme(null) }}
-            className="mt-3 text-sm text-accent font-semibold"
-          >
-            Clear filters
-          </button>
-        </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {materials.map((m, index) => {
-            const config = LEVEL_CONFIG[m.difficulty] || LEVEL_CONFIG[1]
-            const paragraphCount = m.paragraphs?.length || 1
-            return (
+        <>
+          {/* Recommended for you */}
+          {recommendations.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-foreground mb-2">Recommended for You</h3>
+              <div className="space-y-2">
+                {recommendations.map((rec) => {
+                  const config = LEVEL_CONFIG[rec.material.difficulty] || LEVEL_CONFIG[1]
+                  return (
+                    <button
+                      key={rec.material.id}
+                      onClick={() => onSelect(rec.material)}
+                      className={`w-full text-left p-4 rounded-2xl border-2 border-accent/20 bg-accent/5 hover:border-accent/40 transition-all active:scale-[0.98]`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl mt-0.5">{themeIcon(rec.material.theme)}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="font-bold text-foreground truncate">{rec.material.title}</h3>
+                            <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${config.bg} ${config.color}`}>
+                              {config.icon} {config.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-accent font-semibold">{rec.reason}</p>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {materials.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-4xl mb-3">📚</p>
+              <p className="text-muted font-medium">No readings found</p>
               <button
-                key={m.id}
-                onClick={() => onSelect(m)}
-                className={`text-left p-4 sm:p-5 rounded-2xl border-2 transition-all active:scale-[0.98] ${
-                  selected?.id === m.id
-                    ? `${config.bg} ring-2 ring-offset-2 ring-current ${config.color}`
-                    : 'bg-white border-border hover:border-border-active hover:shadow-sm'
-                }`}
-                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => { setDifficulty(null); setTheme(null) }}
+                className="mt-3 text-sm text-accent font-semibold"
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl sm:text-3xl mt-0.5">{themeIcon(m.theme)}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <h3 className="font-bold text-base sm:text-lg text-foreground truncate">
-                        {m.title}
-                      </h3>
-                      <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${config.bg} ${config.color}`}>
-                        {config.icon} {config.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted line-clamp-2 leading-relaxed">
-                      {m.paragraphs?.[0]?.text || m.content}
-                    </p>
-                    <div className="mt-2 flex gap-3 text-xs text-muted">
-                      <span>{m.word_count} words</span>
-                      <span>{paragraphCount} paragraphs</span>
-                    </div>
-                    {savedMaterialId === m.id && (
-                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                        <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        Resume reading
-                      </span>
-                    )}
-                  </div>
-                </div>
+                Clear filters
               </button>
-            )
-          })}
-        </div>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {materials.map((m, index) => {
+                const config = LEVEL_CONFIG[m.difficulty] || LEVEL_CONFIG[1]
+                const paragraphCount = m.paragraphs?.length || 1
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => onSelect(m)}
+                    className={`text-left p-4 sm:p-5 rounded-2xl border-2 transition-all active:scale-[0.98] ${
+                      selected?.id === m.id
+                        ? `${config.bg} ring-2 ring-offset-2 ring-current ${config.color}`
+                        : 'bg-white border-border hover:border-border-active hover:shadow-sm'
+                    }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl sm:text-3xl mt-0.5">{themeIcon(m.theme)}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <h3 className="font-bold text-base sm:text-lg text-foreground truncate">
+                            {m.title}
+                          </h3>
+                          <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${config.bg} ${config.color}`}>
+                            {config.icon} {config.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted line-clamp-2 leading-relaxed">
+                          {m.paragraphs?.[0]?.text || m.content}
+                        </p>
+                        <div className="mt-2 flex gap-3 text-xs text-muted">
+                          <span>{m.word_count} words</span>
+                          <span>{paragraphCount} paragraphs</span>
+                        </div>
+                        {savedMaterialId === m.id && (
+                          <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                            <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Resume reading
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
