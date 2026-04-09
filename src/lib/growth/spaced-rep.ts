@@ -10,6 +10,9 @@ export interface VocabEntry {
   nextReview: string // ISO date string
   addedAt: string
   lastReviewed?: string
+  contextSentence?: string
+  sourceMaterial?: string
+  sourceTheme?: string
 }
 
 const VOCAB_STORAGE_KEY = 'isa-reading-vocab-queue'
@@ -28,7 +31,7 @@ export function saveVocabQueue(queue: VocabEntry[]): void {
   } catch { /* localStorage full */ }
 }
 
-export function addWordsToQueue(words: { word: string; tip: string }[]): void {
+export function addWordsToQueue(words: { word: string; tip: string; contextSentence?: string; sourceMaterial?: string; sourceTheme?: string }[]): void {
   const queue = loadVocabQueue()
   const today = new Date().toISOString().split('T')[0]
   const tomorrow = getDatePlusDays(today, 1)
@@ -41,6 +44,9 @@ export function addWordsToQueue(words: { word: string; tip: string }[]): void {
       existing.box = 0
       existing.nextReview = tomorrow
       existing.tip = w.tip
+      if (w.contextSentence) existing.contextSentence = w.contextSentence
+      if (w.sourceMaterial) existing.sourceMaterial = w.sourceMaterial
+      if (w.sourceTheme) existing.sourceTheme = w.sourceTheme
       continue
     }
 
@@ -50,6 +56,9 @@ export function addWordsToQueue(words: { word: string; tip: string }[]): void {
       box: 0,
       nextReview: tomorrow,
       addedAt: today,
+      contextSentence: w.contextSentence,
+      sourceMaterial: w.sourceMaterial,
+      sourceTheme: w.sourceTheme,
     })
   }
 
