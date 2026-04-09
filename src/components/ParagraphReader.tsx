@@ -23,6 +23,7 @@ interface Props {
   onPrevParagraph: () => void
   onPauseReading?: () => void
   onStartOver?: () => void
+  onStartDrill?: () => void
 }
 
 function HighlightedText({ text, keywords }: { text: string; keywords: string[] }) {
@@ -96,6 +97,7 @@ export default function ParagraphReader({
   onPrevParagraph,
   onPauseReading,
   onStartOver,
+  onStartDrill,
 }: Props) {
   const paragraph = paragraphs[currentIndex]
   const isFirst = currentIndex === 0
@@ -250,6 +252,7 @@ export default function ParagraphReader({
             targetText={paragraph.text}
             studentText={studentText}
             onRetry={onRetryParagraph}
+            onStartDrill={onStartDrill}
           />
 
           {/* Next paragraph button */}

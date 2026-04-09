@@ -18,6 +18,8 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [badges, setBadges] = useState<Badge[]>([])
   const [loading, setLoading] = useState(true)
+  const [vocabStats, setVocabStats] = useState<{ total: number; due: number; mastered: number } | null>(null)
+  const [drillsCompleted, setDrillsCompleted] = useState(0)
 
   useEffect(() => {
     fetch('/api/growth')
@@ -28,6 +30,19 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
       })
       .catch(console.error)
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    // Load vocab queue stats (client-side only)
+    import('@/lib/growth/spaced-rep').then(({ getQueueStats }) => {
+      setVocabStats(getQueueStats())
+    }).catch(() => {})
+
+    // Load drill completion count
+    try {
+      const count = parseInt(localStorage.getItem('isa-reading-drills-completed') || '0', 10)
+      setDrillsCompleted(count)
+    } catch {}
   }, [])
 
   if (loading) {
@@ -69,6 +84,48 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
           <p className="text-xs text-violet-600">Vocabulary mastered through reading</p>
         </div>
       </div>
+
+      {/* Vocabulary Review Queue */}
+      {vocabStats && vocabStats.total > 0 && (
+        <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🧠</span>
+              <h3 className="font-bold text-indigo-700 text-sm">Vocabulary Review</h3>
+            </div>
+            {vocabStats.due > 0 && (
+              <span className="text-xs font-bold px-2 py-1 rounded-full bg-indigo-200 text-indigo-700">
+                {vocabStats.due} due today
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-lg font-bold text-indigo-600 tabular-nums">{vocabStats.total}</p>
+              <p className="text-[10px] text-indigo-500">In Queue</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-indigo-600 tabular-nums">{vocabStats.due}</p>
+              <p className="text-[10px] text-indigo-500">Due Today</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-green-600 tabular-nums">{vocabStats.mastered}</p>
+              <p className="text-[10px] text-green-500">Mastered</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drill stats */}
+      {drillsCompleted > 0 && (
+        <div className="p-4 rounded-2xl bg-pink-50 border border-pink-200 flex items-center gap-3">
+          <span className="text-3xl">🏋️</span>
+          <div>
+            <p className="font-bold text-pink-700">{drillsCompleted} drills completed</p>
+            <p className="text-xs text-pink-600">Practice makes perfect!</p>
+          </div>
+        </div>
+      )}
 
       {/* Start reading CTA (if no readings yet) */}
       {(metrics?.total_readings || 0) === 0 && (
