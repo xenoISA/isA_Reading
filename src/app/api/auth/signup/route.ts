@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 import { hashPin, generateToken, getTokenExpiry, setAuthCookie, randomAvatar } from '@/lib/auth'
+import { gradeToLevel } from '@/lib/grade-to-level'
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
         age: age || null,
         grade: grade || null,
         preferred_themes: preferred_themes || [],
-        reading_level: 1,
+        reading_level: grade ? gradeToLevel(grade) : 1,
       })
       .select()
       .single()

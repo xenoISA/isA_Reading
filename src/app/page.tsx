@@ -89,7 +89,7 @@ export default function Home() {
   const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
   const [improvement, setImprovement] = useState<{ previousBest: number; delta: number } | null>(null)
 
-  const handleThemesComplete = useCallback((themes: Theme[]) => {
+  const handleThemesComplete = useCallback((themes: Theme[], _goal?: string) => {
     setPreferredThemes(themes)
     setStep('select')
   }, [])

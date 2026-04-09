@@ -4,11 +4,18 @@ import { useState, useEffect } from 'react'
 import { THEMES, type Theme } from '@/types'
 
 interface Props {
-  onComplete: (themes: Theme[]) => void
+  onComplete: (themes: Theme[], goal?: string) => void
 }
+
+const GOALS = [
+  { key: 'fluency', icon: '\uD83D\uDDE3\uFE0F', label: 'Read better' },
+  { key: 'vocabulary', icon: '\uD83D\uDCDA', label: 'Learn new words' },
+  { key: 'fun', icon: '\u2B50', label: 'Have fun!' },
+]
 
 export default function ThemePicker({ onComplete }: Props) {
   const [selected, setSelected] = useState<Theme[]>([])
+  const [goal, setGoal] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('isa-reading-themes')
@@ -31,7 +38,8 @@ export default function ThemePicker({ onComplete }: Props) {
   const handleContinue = () => {
     const themes = selected.length > 0 ? selected : THEMES.map(t => t.key)
     localStorage.setItem('isa-reading-themes', JSON.stringify(themes))
-    onComplete(themes)
+    if (goal) localStorage.setItem('isa-reading-goal', goal)
+    onComplete(themes, goal || undefined)
   }
 
   return (
@@ -63,6 +71,32 @@ export default function ThemePicker({ onComplete }: Props) {
             </button>
           )
         })}
+      </div>
+
+      {/* Reading goal */}
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-foreground text-center">What&apos;s your reading goal?</p>
+        <div className="flex gap-3">
+          {GOALS.map(g => {
+            const isSelected = goal === g.key
+            return (
+              <button
+                key={g.key}
+                onClick={() => setGoal(g.key)}
+                className={`flex-1 p-3 rounded-2xl border-2 transition-all active:scale-95 flex flex-col items-center gap-1 ${
+                  isSelected
+                    ? 'border-accent bg-orange-50 shadow-sm'
+                    : 'border-border bg-white hover:border-border-active'
+                }`}
+              >
+                <span className="text-2xl">{g.icon}</span>
+                <span className={`text-xs font-semibold ${isSelected ? 'text-accent' : 'text-foreground'}`}>
+                  {g.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <button
