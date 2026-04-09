@@ -44,6 +44,7 @@ export default function Home() {
   const [assessment, setAssessment] = useState<LLMAssessment | null>(null)
   const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
 
   const handleThemesComplete = useCallback((themes: Theme[]) => {
     setPreferredThemes(themes)
@@ -107,12 +108,13 @@ export default function Home() {
     if (!material?.paragraphs?.[currentParagraph]) return
     setParagraphStep('processing')
     setStep('processing')
+    setProcessingStage('transcribing')
     setError(null)
 
     const paragraph = material.paragraphs[currentParagraph]
 
     try {
-      // Run transcription + pronunciation analysis in parallel
+      // Build forms
       const transcribeForm = new FormData()
       transcribeForm.append('audio', blob, 'recording.webm')
 
@@ -121,7 +123,7 @@ export default function Home() {
       try {
         const { convertBlobToWav } = await import('@/lib/audio-utils')
         wavBlob = await convertBlobToWav(blob)
-      } catch { /* wav conversion failed, will skip pronunciation */ }
+      } catch { /* wav conversion failed */ }
 
       const pronounceForm = new FormData()
       if (wavBlob) {
@@ -132,27 +134,22 @@ export default function Home() {
       pronounceForm.append('target_text', paragraph.text)
       pronounceForm.append('keywords', JSON.stringify(paragraph.keywords))
 
-      const [transcribeRes, pronounceRes] = await Promise.all([
-        fetch('/api/transcribe', { method: 'POST', body: transcribeForm }),
-        fetch('/api/pronounce', { method: 'POST', body: pronounceForm }).catch(() => null),
-      ])
+      // Start transcribe + pronounce in parallel
+      const transcribePromise = fetch('/api/transcribe', { method: 'POST', body: transcribeForm })
+      const pronouncePromise = fetch('/api/pronounce', { method: 'POST', body: pronounceForm }).catch(() => null)
 
+      // Wait for transcribe (needed for assess)
+      const transcribeRes = await transcribePromise
       if (!transcribeRes.ok) {
         const err = await transcribeRes.json()
         throw new Error(err.error || 'Transcription failed')
       }
       const transcript = await transcribeRes.json()
       setStudentText(transcript.text)
+      setProcessingStage('analyzing')
 
-      // Get pronunciation results (non-blocking — falls back gracefully)
-      let pronResult: PronunciationResult | null = null
-      if (pronounceRes?.ok) {
-        pronResult = await pronounceRes.json()
-        setPronunciation(pronResult)
-      }
-
-      // LLM text assessment (uses OpenRouter — cheap)
-      const assessRes = await fetch('/api/assess', {
+      // Start assess immediately (don't wait for pronounce!)
+      const assessPromise = fetch('/api/assess', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,6 +162,22 @@ export default function Home() {
           keywords: paragraph.keywords,
         }),
       })
+
+      setProcessingStage('scoring')
+
+      // Wait for both assess and pronounce in parallel
+      const [assessRes, pronounceRes] = await Promise.all([
+        assessPromise,
+        pronouncePromise,
+      ])
+
+      // Process pronunciation (non-blocking)
+      if (pronounceRes?.ok) {
+        const pronResult = await pronounceRes.json()
+        setPronunciation(pronResult)
+      }
+
+      // Process assessment
       if (!assessRes.ok) {
         const err = await assessRes.json()
         throw new Error(err.error || 'Assessment failed')
@@ -364,6 +377,7 @@ export default function Home() {
               currentIndex={currentParagraph}
               progress={paragraphProgress}
               step={paragraphStep}
+              processingStage={processingStage}
               assessment={assessment}
               pronunciation={pronunciation}
               studentText={studentText}
