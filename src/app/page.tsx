@@ -12,8 +12,9 @@ import ParagraphReader from '@/components/ParagraphReader'
 import DrillMode from '@/components/DrillMode'
 import Dashboard from '@/components/Dashboard'
 import BottomNav from '@/components/BottomNav'
+import WordBank from '@/components/WordBank'
 
-type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'drill' | 'dashboard'
+type Step = 'themes' | 'select' | 'read' | 'record' | 'processing' | 'feedback' | 'drill' | 'wordbank' | 'dashboard'
 type ParagraphStep = 'reading' | 'recording' | 'processing' | 'feedback'
 
 function speakWithBrowser(text: string) {
@@ -25,7 +26,7 @@ function speakWithBrowser(text: string) {
 
 // Map outer step to StepIndicator step
 function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing' | 'feedback' {
-  if (step === 'themes' || step === 'dashboard') return 'select'
+  if (step === 'themes' || step === 'dashboard' || step === 'wordbank') return 'select'
   if (step === 'drill') return 'feedback'
   return step
 }
@@ -81,6 +82,7 @@ export default function Home() {
   const [assessment, setAssessment] = useState<LLMAssessment | null>(null)
   const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
   const [drillWords, setDrillWords] = useState<{ word: string; tip: string }[]>([])
+  const [drillOrigin, setDrillOrigin] = useState<'feedback' | 'wordbank'>('feedback')
   const [error, setError] = useState<string | null>(null)
   const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
   const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
@@ -277,10 +279,16 @@ export default function Home() {
       // Auto-add mispronounced words to spaced rep queue
       try {
         const { addWordsToQueue } = await import('@/lib/growth/spaced-rep')
-        const wordsToQueue: { word: string; tip: string }[] = []
+        const wordsToQueue: { word: string; tip: string; contextSentence?: string; sourceMaterial?: string; sourceTheme?: string }[] = []
         if (pronResult?.mispronounced) {
           for (const m of pronResult.mispronounced) {
-            if (m.word.length > 1) wordsToQueue.push({ word: m.word, tip: m.tip })
+            if (m.word.length > 1) wordsToQueue.push({
+              word: m.word,
+              tip: m.tip,
+              contextSentence: paragraph.text.slice(0, 200),
+              sourceMaterial: material.title,
+              sourceTheme: material.theme,
+            })
           }
         }
         if (wordsToQueue.length > 0) addWordsToQueue(wordsToQueue)
@@ -321,6 +329,7 @@ export default function Home() {
 
     if (words.length > 0) {
       setDrillWords(words)
+      setDrillOrigin('feedback')
       setStep('drill')
     }
   }, [pronunciation, assessment])
@@ -344,13 +353,27 @@ export default function Home() {
       localStorage.setItem(drillCountKey, String(count + 1))
     } catch {}
 
-    setStep('feedback')
+    // Advance/demote words in spaced rep
+    try {
+      const { advanceWord } = await import('@/lib/growth/spaced-rep')
+      for (const r of results) {
+        advanceWord(r.word, r.passed)
+      }
+    } catch { /* non-critical */ }
+
+    setStep(drillOrigin === 'wordbank' ? 'wordbank' : 'feedback')
     setDrillWords([])
-  }, [])
+  }, [drillOrigin])
 
   const handleDrillSkip = useCallback(() => {
-    setStep('feedback')
+    setStep(drillOrigin === 'wordbank' ? 'wordbank' : 'feedback')
     setDrillWords([])
+  }, [drillOrigin])
+
+  const handleWordBankDrill = useCallback((words: { word: string; tip: string }[]) => {
+    setDrillWords(words)
+    setDrillOrigin('wordbank')
+    setStep('drill')
   }, [])
 
   const handleNextParagraph = useCallback(() => {
@@ -433,7 +456,7 @@ export default function Home() {
             isA Reading
           </button>
           <div className="flex items-center gap-3">
-            {step !== 'themes' && step !== 'select' && step !== 'dashboard' && (
+            {step !== 'themes' && step !== 'select' && step !== 'dashboard' && step !== 'wordbank' && (
               <button
                 onClick={handleNewMaterial}
                 className="text-sm text-muted hover:text-foreground transition-colors font-medium"
@@ -454,7 +477,7 @@ export default function Home() {
       </header>
 
       {/* Step indicator — only for reading flow steps */}
-      {step !== 'themes' && step !== 'dashboard' && step !== 'drill' && (
+      {step !== 'themes' && step !== 'dashboard' && step !== 'drill' && step !== 'wordbank' && (
         <StepIndicator currentStep={toIndicatorStep(step)} />
       )}
 
@@ -470,6 +493,11 @@ export default function Home() {
         {/* === Dashboard === */}
         {step === 'dashboard' && (
           <Dashboard onStartReading={() => setStep('select')} />
+        )}
+
+        {/* === Word Bank === */}
+        {step === 'wordbank' && (
+          <WordBank onStartReview={handleWordBankDrill} />
         )}
 
         {/* === Theme Picker === */}
@@ -557,10 +585,11 @@ export default function Home() {
       {/* Bottom navigation — only when logged in */}
       {child && (
         <BottomNav
-          activeTab={step === 'dashboard' ? 'dashboard' : 'read'}
+          activeTab={step === 'dashboard' ? 'dashboard' : step === 'wordbank' ? 'wordbank' : 'read'}
           onTabChange={(tab) => {
             if (tab === 'dashboard') setStep('dashboard')
-            else if (step === 'dashboard') setStep('select')
+            else if (tab === 'wordbank') setStep('wordbank')
+            else if (step === 'dashboard' || step === 'wordbank') setStep('select')
           }}
           streak={child.current_streak}
           points={child.total_points}
