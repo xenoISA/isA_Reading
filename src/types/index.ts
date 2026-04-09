@@ -216,6 +216,7 @@ export interface GrowthMetrics {
   vocabulary_learned: number
   accuracy_trend: { date: string; score: number }[]
   recent_readings: { date: string; title: string; score: number; material_id: string }[]
+  error_patterns?: { category: string; count: number; example_words: string[] }[]
 }
 
 export interface PointsEntry {

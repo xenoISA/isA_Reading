@@ -57,6 +57,30 @@ export async function GET() {
       }
     }
 
+    // Aggregate error patterns
+    const errorPatterns = new Map<string, { count: number; words: string[] }>()
+    for (const s of completedSessions) {
+      const assessment = s.assessment as Record<string, unknown>
+      const categories = assessment?.error_categories as { word: string; category: string; tip: string }[] | undefined
+      if (categories) {
+        for (const cat of categories) {
+          if (!errorPatterns.has(cat.category)) {
+            errorPatterns.set(cat.category, { count: 0, words: [] })
+          }
+          const entry = errorPatterns.get(cat.category)!
+          entry.count++
+          if (!entry.words.includes(cat.word) && entry.words.length < 5) {
+            entry.words.push(cat.word)
+          }
+        }
+      }
+    }
+
+    const errorPatternsArray = Array.from(errorPatterns.entries())
+      .map(([category, data]) => ({ category, count: data.count, example_words: data.words }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
     // Recent readings
     const { data: materials } = await supabase.from('materials').select('id, title')
     const materialMap = new Map((materials || []).map(m => [m.id, m.title]))
@@ -84,6 +108,7 @@ export async function GET() {
       vocabulary_learned: vocabSet.size,
       accuracy_trend: accuracyTrend,
       recent_readings: recentReadings,
+      error_patterns: errorPatternsArray,
     }
 
     return NextResponse.json({ metrics, badges: badges || [] })

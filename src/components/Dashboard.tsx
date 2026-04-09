@@ -5,6 +5,14 @@ import { useAuth } from './AuthProvider'
 import type { GrowthMetrics, Badge, BadgeKey } from '@/types'
 import { BADGE_DEFS } from '@/types'
 
+const ERROR_PATTERN_CONFIG: Record<string, { icon: string; label: string; bg: string; border: string; text: string }> = {
+  sight_word: { icon: '👁️', label: 'Sight Words', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  phoneme: { icon: '🔤', label: 'Sound Patterns', bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700' },
+  fluency: { icon: '🌊', label: 'Reading Flow', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
+  comprehension: { icon: '💭', label: 'Understanding', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700' },
+  other: { icon: '📝', label: 'Other', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
+}
+
 export default function Dashboard({ onStartReading }: { onStartReading: () => void }) {
   const { child } = useAuth()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
@@ -95,6 +103,42 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Error Patterns */}
+      {metrics?.error_patterns && metrics.error_patterns.length > 0 && (metrics?.total_readings || 0) >= 5 && (
+        <div className="p-4 rounded-2xl bg-surface border border-border">
+          <h3 className="font-bold text-foreground mb-3 text-sm">Areas to Practice</h3>
+          <div className="space-y-2">
+            {metrics.error_patterns.map((pattern, i) => {
+              const config = ERROR_PATTERN_CONFIG[pattern.category] || ERROR_PATTERN_CONFIG.other
+              return (
+                <div key={i} className={`p-3 rounded-xl ${config.bg} border ${config.border}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-sm font-semibold ${config.text}`}>
+                      {config.icon} {config.label}
+                    </span>
+                    <span className={`text-xs font-bold ${config.text}`}>{pattern.count}x</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {pattern.example_words.map((w, j) => (
+                      <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-white/60 text-foreground font-medium">
+                        {w}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Not enough readings for error patterns */}
+      {metrics?.error_patterns && (metrics?.total_readings || 0) < 5 && (metrics?.total_readings || 0) > 0 && (
+        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 text-center">
+          <p className="text-sm text-muted">Complete {5 - (metrics?.total_readings || 0)} more readings to see your practice patterns</p>
         </div>
       )}
 
