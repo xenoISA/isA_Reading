@@ -113,19 +113,26 @@ export default function ParagraphReader({
           {onStartOver ? (
             <button
               onClick={onStartOver}
-              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-border bg-surface text-muted hover:text-foreground hover:border-border-active transition-all font-medium"
             >
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               Start over
             </button>
           ) : <div />}
-          <p className="text-center text-xs text-muted flex-1">
+          <p className="text-center text-xs text-muted">
             Paragraph {currentIndex + 1} of {paragraphs.length}
           </p>
           {onPauseReading ? (
             <button
               onClick={onPauseReading}
-              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-border bg-surface text-muted hover:text-foreground hover:border-border-active transition-all font-medium"
             >
+              <svg className="size-3" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
               Pause
             </button>
           ) : <div />}
