@@ -141,6 +141,14 @@ export interface AssessmentContext {
   keywords?: string[]
 }
 
+export type ErrorCategory = 'sight_word' | 'phoneme' | 'fluency' | 'comprehension' | 'other'
+
+export interface CategorizedError {
+  word: string
+  category: ErrorCategory
+  tip: string
+}
+
 export interface LLMAssessment {
   accuracy_score: number
   mispronounced_words: MispronounceDetail[]
@@ -149,6 +157,7 @@ export interface LLMAssessment {
   feedback: string
   encouragement: string
   keyword_accuracy?: { word: string; correct: boolean }[]
+  error_categories?: CategorizedError[]
 }
 
 // === User / Profile ===

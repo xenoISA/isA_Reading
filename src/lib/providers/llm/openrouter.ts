@@ -22,6 +22,9 @@ Respond in JSON format:
   "skipped_words": ["words the student missed"],
   "added_words": ["extra words the student said"],
   "keyword_accuracy": [{"word": "vocabulary word", "correct": true/false}],
+  "error_categories": [
+    {"word": "word", "category": "sight_word|phoneme|fluency|comprehension|other", "tip": "actionable tip for the student"}
+  ],
   "feedback": "<2-3 specific corrections focusing on the vocabulary words, in simple encouraging language>",
   "encouragement": "<a short encouraging message appropriate for a child>"
 }
@@ -31,7 +34,13 @@ Rules:
 - Be encouraging and age-appropriate
 - Focus on the most impactful corrections, not every tiny error
 - If vocabulary words were pronounced correctly, praise that specifically
-- Keep feedback under 3 sentences`
+- Keep feedback under 3 sentences
+- Categorize each error:
+  - "sight_word": common words the student should recognize on sight (e.g., "the", "said", "because")
+  - "phoneme": words with tricky sounds or sound patterns (e.g., "through", "enough", "rhythm")
+  - "fluency": words the student hesitated on, repeated, or stumbled over
+  - "comprehension": words the student replaced with a synonym or wrong word suggesting misunderstanding
+  - "other": errors that don't fit the above categories`
 
 export class OpenRouterLLMProvider implements LLMProvider {
   readonly name = 'openrouter'
@@ -98,6 +107,7 @@ export class OpenRouterLLMProvider implements LLMProvider {
       feedback: parsed.feedback || 'Good try! Keep practicing.',
       encouragement: parsed.encouragement || 'You\'re doing great!',
       keyword_accuracy: parsed.keyword_accuracy || [],
+      error_categories: parsed.error_categories || [],
     }
   }
 }

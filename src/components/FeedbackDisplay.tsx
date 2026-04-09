@@ -1,6 +1,14 @@
 'use client'
 
-import type { LLMAssessment, PronunciationResult } from '@/types'
+import type { LLMAssessment, PronunciationResult, ErrorCategory } from '@/types'
+
+const ERROR_CATEGORY_CONFIG: Record<ErrorCategory, { icon: string; label: string; bg: string; border: string; text: string }> = {
+  sight_word: { icon: '👁️', label: 'Sight Words', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
+  phoneme: { icon: '🔤', label: 'Sound Patterns', bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700' },
+  fluency: { icon: '🌊', label: 'Reading Flow', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
+  comprehension: { icon: '💭', label: 'Understanding', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700' },
+  other: { icon: '📝', label: 'Other', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
+}
 
 interface Props {
   assessment: LLMAssessment
@@ -103,6 +111,54 @@ export default function FeedbackDisplay({ assessment, pronunciation, targetText,
       <div className="text-center text-base text-foreground bg-surface-alt rounded-2xl p-4 border border-border">
         {pronunciation?.encouragement || assessment.encouragement}
       </div>
+
+      {/* Error categories */}
+      {assessment.error_categories && assessment.error_categories.length > 0 && (() => {
+        const grouped = assessment.error_categories.reduce<Record<ErrorCategory, { word: string; tip: string }[]>>((acc, err) => {
+          if (!acc[err.category]) acc[err.category] = []
+          acc[err.category].push({ word: err.word, tip: err.tip })
+          return acc
+        }, {} as Record<ErrorCategory, { word: string; tip: string }[]>)
+        const categories = Object.entries(grouped) as [ErrorCategory, { word: string; tip: string }[]][]
+        const useCollapsible = categories.length > 2
+
+        const content = (
+          <div className="space-y-2">
+            {categories.map(([cat, errors]) => {
+              const config = ERROR_CATEGORY_CONFIG[cat] || ERROR_CATEGORY_CONFIG.other
+              return (
+                <div key={cat} className={`p-3 rounded-xl ${config.bg} border ${config.border}`}>
+                  <h5 className={`text-sm font-semibold ${config.text} mb-1.5`}>
+                    {config.icon} {config.label}
+                  </h5>
+                  <div className="space-y-1">
+                    {errors.map((e, j) => (
+                      <div key={j} className="flex items-start gap-2">
+                        <span className="font-bold text-sm text-foreground shrink-0">{e.word}</span>
+                        <span className="text-xs text-muted leading-relaxed">{e.tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+
+        return (
+          <div className="space-y-3">
+            <h4 className="font-bold text-foreground text-sm">What to Practice</h4>
+            {useCollapsible ? (
+              <details open>
+                <summary className="cursor-pointer text-sm font-medium text-muted hover:text-foreground mb-2">
+                  {categories.length} areas to work on
+                </summary>
+                {content}
+              </details>
+            ) : content}
+          </div>
+        )
+      })()}
 
       {/* Pronunciation details — mispronounced words with phonetic tips */}
       {pronunciation?.mispronounced && pronunciation.mispronounced.length > 0 && (
