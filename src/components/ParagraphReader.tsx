@@ -21,6 +21,8 @@ interface Props {
   onRetryParagraph: () => void
   onNextParagraph: () => void
   onPrevParagraph: () => void
+  onPauseReading?: () => void
+  onStartOver?: () => void
 }
 
 function HighlightedText({ text, keywords }: { text: string; keywords: string[] }) {
@@ -92,6 +94,8 @@ export default function ParagraphReader({
   onRetryParagraph,
   onNextParagraph,
   onPrevParagraph,
+  onPauseReading,
+  onStartOver,
 }: Props) {
   const paragraph = paragraphs[currentIndex]
   const isFirst = currentIndex === 0
@@ -100,12 +104,30 @@ export default function ParagraphReader({
 
   return (
     <div className="space-y-5 animate-scale-in">
-      {/* Paragraph progress dots */}
+      {/* Paragraph progress dots + controls */}
       <div className="space-y-2">
         <ParagraphNav total={paragraphs.length} current={currentIndex} progress={progress} />
-        <p className="text-center text-xs text-muted">
-          Paragraph {currentIndex + 1} of {paragraphs.length}
-        </p>
+        <div className="flex items-center justify-between">
+          {onStartOver ? (
+            <button
+              onClick={onStartOver}
+              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+            >
+              Start over
+            </button>
+          ) : <div />}
+          <p className="text-center text-xs text-muted flex-1">
+            Paragraph {currentIndex + 1} of {paragraphs.length}
+          </p>
+          {onPauseReading ? (
+            <button
+              onClick={onPauseReading}
+              className="text-xs text-muted hover:text-foreground transition-colors font-medium"
+            >
+              Pause
+            </button>
+          ) : <div />}
+        </div>
       </div>
 
       {/* === Reading step === */}

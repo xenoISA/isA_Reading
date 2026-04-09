@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Material, Theme, LLMAssessment, ParagraphProgress, PronunciationResult } from '@/types'
 import { BADGE_DEFS, type BadgeKey } from '@/types'
 import { useAuth } from '@/components/AuthProvider'
@@ -28,6 +28,41 @@ function toIndicatorStep(step: Step): 'select' | 'read' | 'record' | 'processing
   return step
 }
 
+const SESSION_STORAGE_KEY = 'isa-reading-session'
+
+interface SavedSession {
+  materialId: string
+  currentParagraph: number
+  paragraphStep: ParagraphStep
+  paragraphProgress: ParagraphProgress[]
+  savedAt: string
+}
+
+function saveSession(materialId: string, currentParagraph: number, paragraphStep: ParagraphStep, paragraphProgress: ParagraphProgress[]) {
+  try {
+    const session: SavedSession = {
+      materialId,
+      currentParagraph,
+      paragraphStep: paragraphStep === 'recording' || paragraphStep === 'processing' ? 'reading' : paragraphStep,
+      paragraphProgress,
+      savedAt: new Date().toISOString(),
+    }
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
+  } catch { /* localStorage full or unavailable */ }
+}
+
+function loadSession(): SavedSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_STORAGE_KEY) } catch {}
+}
+
 export default function Home() {
   const { child, loading: authLoading, logout } = useAuth()
   const [skipAuth, setSkipAuth] = useState(false)
@@ -45,26 +80,57 @@ export default function Home() {
   const [pronunciation, setPronunciation] = useState<PronunciationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [processingStage, setProcessingStage] = useState<'transcribing' | 'analyzing' | 'scoring'>('transcribing')
+  const [savedMaterialId, setSavedMaterialId] = useState<string | null>(null)
 
   const handleThemesComplete = useCallback((themes: Theme[]) => {
     setPreferredThemes(themes)
     setStep('select')
   }, [])
 
+  // Auto-save session on meaningful state changes
+  useEffect(() => {
+    if (material && (step === 'read' || step === 'record' || step === 'processing' || step === 'feedback')) {
+      saveSession(material.id, currentParagraph, paragraphStep, paragraphProgress)
+    }
+  }, [material, currentParagraph, paragraphStep, paragraphProgress, step])
+
+  // Load saved material ID (re-check when returning to select)
+  useEffect(() => {
+    const saved = loadSession()
+    setSavedMaterialId(saved?.materialId ?? null)
+  }, [step])
+
   const handleSelectMaterial = useCallback((m: Material) => {
+    const saved = loadSession()
+    if (saved && saved.materialId === m.id) {
+      // Resume saved session
+      setMaterial(m)
+      setCurrentParagraph(saved.currentParagraph)
+      setParagraphStep(saved.paragraphStep)
+      setAssessment(null)
+      setPronunciation(null)
+      setStudentText('')
+      setError(null)
+      setParagraphProgress(saved.paragraphProgress)
+      setStep(saved.paragraphStep === 'feedback' ? 'feedback' : 'read')
+      return
+    }
+    // Fresh start
     setMaterial(m)
     setCurrentParagraph(0)
     setParagraphStep('reading')
     setAssessment(null)
+    setPronunciation(null)
     setStudentText('')
     setError(null)
-    // Initialize paragraph progress
     const progress: ParagraphProgress[] = (m.paragraphs || []).map((_, i) => ({
       paragraph_index: i,
       status: 'pending' as const,
     }))
     setParagraphProgress(progress)
     setStep('read')
+    clearSession()
+    setSavedMaterialId(null)
   }, [])
 
   const handlePlayParagraph = useCallback(async () => {
@@ -238,14 +304,39 @@ export default function Home() {
   }, [])
 
   const handleNewMaterial = useCallback(() => {
+    clearSession()
+    setSavedMaterialId(null)
     setStep('select')
     setMaterial(null)
     setAssessment(null)
+    setPronunciation(null)
     setStudentText('')
     setCurrentParagraph(0)
     setParagraphProgress([])
     setError(null)
   }, [])
+
+  const handlePauseReading = useCallback(() => {
+    // Session already auto-saved via useEffect
+    setStep('select')
+  }, [])
+
+  const handleStartOver = useCallback(() => {
+    if (!material) return
+    clearSession()
+    setCurrentParagraph(0)
+    setParagraphStep('reading')
+    setAssessment(null)
+    setPronunciation(null)
+    setStudentText('')
+    setError(null)
+    const progress: ParagraphProgress[] = (material.paragraphs || []).map((_, i) => ({
+      paragraph_index: i,
+      status: 'pending' as const,
+    }))
+    setParagraphProgress(progress)
+    setStep('read')
+  }, [material])
 
   const handleChangeThemes = useCallback(() => {
     localStorage.removeItem('isa-reading-themes')
@@ -354,6 +445,7 @@ export default function Home() {
               onSelect={handleSelectMaterial}
               selected={material}
               preferredThemes={preferredThemes}
+              savedMaterialId={savedMaterialId}
             />
           </div>
         )}
@@ -389,6 +481,8 @@ export default function Home() {
               onRetryParagraph={handleRetryParagraph}
               onNextParagraph={handleNextParagraph}
               onPrevParagraph={handlePrevParagraph}
+              onPauseReading={handlePauseReading}
+              onStartOver={handleStartOver}
             />
 
             {/* Overall summary when all paragraphs done */}

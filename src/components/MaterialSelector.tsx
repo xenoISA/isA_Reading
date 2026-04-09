@@ -16,9 +16,10 @@ interface Props {
   onSelect: (material: Material) => void
   selected?: Material | null
   preferredThemes?: Theme[]
+  savedMaterialId?: string | null
 }
 
-export default function MaterialSelector({ onSelect, selected, preferredThemes }: Props) {
+export default function MaterialSelector({ onSelect, selected, preferredThemes, savedMaterialId }: Props) {
   const [materials, setMaterials] = useState<Material[]>([])
   const [difficulty, setDifficulty] = useState<number | null>(null)
   const [theme, setTheme] = useState<Theme | null>(null)
@@ -172,6 +173,12 @@ export default function MaterialSelector({ onSelect, selected, preferredThemes }
                       <span>{m.word_count} words</span>
                       <span>{paragraphCount} paragraphs</span>
                     </div>
+                    {savedMaterialId === m.id && (
+                      <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                        <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        Resume reading
+                      </span>
+                    )}
                   </div>
                 </div>
               </button>
