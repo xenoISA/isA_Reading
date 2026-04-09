@@ -13,13 +13,19 @@ const ERROR_PATTERN_CONFIG: Record<string, { icon: string; label: string; bg: st
   other: { icon: '📝', label: 'Other', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
 }
 
-export default function Dashboard({ onStartReading }: { onStartReading: () => void }) {
+export default function Dashboard({ onStartReading, onQuickReview, onErrorPatternDrill }: {
+  onStartReading: () => void
+  onQuickReview?: () => void
+  onErrorPatternDrill?: (words: { word: string; tip: string }[]) => void
+}) {
   const { child } = useAuth()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [badges, setBadges] = useState<Badge[]>([])
   const [loading, setLoading] = useState(true)
   const [vocabStats, setVocabStats] = useState<{ total: number; due: number; mastered: number } | null>(null)
   const [drillsCompleted, setDrillsCompleted] = useState(0)
+  const [levelProgress, setLevelProgress] = useState<{ current: number; consecutive80: number; needed: number }>({ current: 1, consecutive80: 0, needed: 3 })
+  const [selectedBadge, setSelectedBadge] = useState<BadgeKey | null>(null)
 
   useEffect(() => {
     fetch('/api/growth')
@@ -27,6 +33,18 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
       .then(data => {
         setMetrics(data.metrics)
         setBadges(data.badges || [])
+        // Compute level progress from recent readings
+        const recentScores = (data.metrics?.recent_readings || []).map((r: { score: number }) => r.score)
+        let consecutive80 = 0
+        for (let i = 0; i < recentScores.length; i++) {
+          if (recentScores[i] >= 80) consecutive80++
+          else break
+        }
+        setLevelProgress({
+          current: data.metrics?.reading_level || 1,
+          consecutive80: Math.min(consecutive80, 3),
+          needed: 3,
+        })
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -59,13 +77,38 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
 
   return (
     <div className="space-y-6 animate-scale-in pb-20">
-      {/* Profile header */}
-      <div className="flex items-center gap-4 p-5 bg-surface rounded-2xl border border-border">
-        <span className="text-5xl">{child?.avatar || '🎓'}</span>
-        <div className="flex-1">
-          <h2 className="text-xl font-bold text-foreground">{child?.display_name || child?.username}</h2>
-          <p className="text-sm text-muted">Level {metrics?.reading_level || 1} Reader</p>
+      {/* Profile header with level progress */}
+      <div className="p-5 bg-surface rounded-2xl border border-border">
+        <div className="flex items-center gap-4 mb-3">
+          <span className="text-5xl">{child?.avatar || '🎓'}</span>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-foreground">{child?.display_name || child?.username}</h2>
+            <p className="text-sm text-muted">Level {levelProgress.current} Reader</p>
+          </div>
         </div>
+        {/* Level progress bar */}
+        {levelProgress.current < 5 && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted">Level {levelProgress.current + 1}</span>
+              <span className="font-semibold text-accent">{levelProgress.consecutive80}/{levelProgress.needed}</span>
+            </div>
+            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-full transition-all duration-500"
+                style={{ width: `${(levelProgress.consecutive80 / levelProgress.needed) * 100}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted">
+              {levelProgress.needed - levelProgress.consecutive80 === 0
+                ? 'Level up incoming!'
+                : `${levelProgress.needed - levelProgress.consecutive80} more 80%+ reading${levelProgress.needed - levelProgress.consecutive80 !== 1 ? 's' : ''} to level up`}
+            </p>
+          </div>
+        )}
+        {levelProgress.current >= 5 && (
+          <p className="text-xs text-green-600 font-semibold">Max level reached!</p>
+        )}
       </div>
 
       {/* Stats grid — color coded */}
@@ -75,6 +118,23 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
         <StatCard value={metrics?.current_streak || 0} label="Day Streak" color="orange" />
         <StatCard value={metrics?.total_points || 0} label="Points" color="amber" />
       </div>
+
+      {/* Quick Review — streak protection */}
+      {onQuickReview && vocabStats && vocabStats.due > 0 && (metrics?.current_streak || 0) > 0 && (
+        <button
+          onClick={onQuickReview}
+          className="w-full p-4 rounded-2xl bg-orange-50 border-2 border-orange-200 flex items-center gap-3 transition-all active:scale-[0.98]"
+        >
+          <span className="text-3xl">🛡️</span>
+          <div className="flex-1 text-left">
+            <p className="font-bold text-orange-700 text-sm">Keep your {metrics?.current_streak}-day streak!</p>
+            <p className="text-xs text-orange-600">Quick review — {Math.min(vocabStats.due, 5)} words, ~2 min</p>
+          </div>
+          <svg className="size-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
 
       {/* Vocabulary */}
       <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center gap-3">
@@ -171,12 +231,27 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
             {metrics.error_patterns.map((pattern, i) => {
               const config = ERROR_PATTERN_CONFIG[pattern.category] || ERROR_PATTERN_CONFIG.other
               return (
-                <div key={i} className={`p-3 rounded-xl ${config.bg} border ${config.border}`}>
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (onErrorPatternDrill && pattern.example_words.length > 0) {
+                      onErrorPatternDrill(pattern.example_words.map(w => ({ word: w, tip: `${config.label} practice` })))
+                    }
+                  }}
+                  className={`w-full text-left p-3 rounded-xl ${config.bg} border ${config.border} transition-all active:scale-[0.98]`}
+                >
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-sm font-semibold ${config.text}`}>
                       {config.icon} {config.label}
                     </span>
-                    <span className={`text-xs font-bold ${config.text}`}>{pattern.count}x</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold ${config.text}`}>{pattern.count}x</span>
+                      {onErrorPatternDrill && pattern.example_words.length > 0 && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${config.bg} ${config.text} border ${config.border}`}>
+                          Practice
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {pattern.example_words.map((w, j) => (
@@ -185,7 +260,7 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
                       </span>
                     ))}
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
@@ -209,9 +284,10 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
           {(Object.entries(BADGE_DEFS) as [BadgeKey, typeof BADGE_DEFS[BadgeKey]][]).map(([key, def]) => {
             const earned = earnedBadgeKeys.has(key)
             return (
-              <div
+              <button
                 key={key}
-                className={`p-3 rounded-2xl text-center transition-all ${
+                onClick={() => setSelectedBadge(key)}
+                className={`p-3 rounded-2xl text-center transition-all cursor-pointer ${
                   earned
                     ? 'bg-amber-50 border-2 border-amber-300 shadow-sm'
                     : 'bg-gray-50 border border-gray-100'
@@ -219,10 +295,29 @@ export default function Dashboard({ onStartReading }: { onStartReading: () => vo
               >
                 <span className={`text-2xl ${earned ? '' : 'grayscale opacity-30'}`}>{def.icon}</span>
                 <p className={`text-[10px] font-semibold mt-1 leading-tight ${earned ? 'text-foreground' : 'text-muted/50'}`}>{def.name}</p>
-              </div>
+              </button>
             )
           })}
         </div>
+        {selectedBadge && (
+          <div className="mt-3 p-4 rounded-2xl bg-surface border-2 border-amber-200 animate-scale-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{BADGE_DEFS[selectedBadge]?.icon}</span>
+                <div>
+                  <p className="font-bold text-foreground">{BADGE_DEFS[selectedBadge]?.name}</p>
+                  <p className="text-xs text-muted">{BADGE_DEFS[selectedBadge]?.description}</p>
+                  {earnedBadgeKeys.has(selectedBadge) ? (
+                    <p className="text-xs text-green-600 font-semibold mt-1">Earned!</p>
+                  ) : (
+                    <p className="text-xs text-amber-600 mt-1">Not yet earned</p>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => setSelectedBadge(null)} className="text-muted hover:text-foreground text-lg">&times;</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Recent readings */}

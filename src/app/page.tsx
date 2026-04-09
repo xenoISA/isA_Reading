@@ -71,6 +71,7 @@ export default function Home() {
   const [skipAuth, setSkipAuth] = useState(false)
   const [step, setStep] = useState<Step>('themes')
   const [newBadgePopup, setNewBadgePopup] = useState<BadgeKey | null>(null)
+  const [levelUpPopup, setLevelUpPopup] = useState<number | null>(null)
   const [preferredThemes, setPreferredThemes] = useState<Theme[]>([])
   const [material, setMaterial] = useState<Material | null>(null)
   const [currentParagraph, setCurrentParagraph] = useState(0)
@@ -258,6 +259,12 @@ export default function Home() {
       const result = await assessRes.json()
       setAssessment(result)
 
+      // Level-up celebration
+      if (result.reading_level && child && result.reading_level > child.reading_level) {
+        setLevelUpPopup(result.reading_level)
+        setTimeout(() => setLevelUpPopup(null), 6000)
+      }
+
       // Show new badge popup if earned
       if (result.new_badges?.length > 0) {
         setNewBadgePopup(result.new_badges[0] as BadgeKey)
@@ -377,6 +384,25 @@ export default function Home() {
     setStep('drill')
   }, [])
 
+  const handleQuickReview = useCallback(() => {
+    import('@/lib/growth/spaced-rep').then(({ getDueWords }) => {
+      const due = getDueWords().slice(0, 5)
+      if (due.length > 0) {
+        setDrillWords(due.map(d => ({ word: d.word, tip: d.tip })))
+        setDrillOrigin('wordbank')
+        setStep('drill')
+      }
+    }).catch(() => {})
+  }, [])
+
+  const handleErrorPatternDrill = useCallback((words: { word: string; tip: string }[]) => {
+    if (words.length > 0) {
+      setDrillWords(words)
+      setDrillOrigin('wordbank')
+      setStep('drill')
+    }
+  }, [])
+
   const handleNextParagraph = useCallback(() => {
     setCurrentParagraph(prev => prev + 1)
     setAssessment(null)
@@ -462,6 +488,24 @@ export default function Home() {
         </div>
       )}
 
+      {/* Level-up celebration */}
+      {levelUpPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm animate-scale-in">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl text-center max-w-sm mx-4 space-y-4">
+            <p className="text-6xl">🎉</p>
+            <h2 className="text-2xl font-bold text-foreground">Level Up!</h2>
+            <p className="text-4xl font-black text-accent">Level {levelUpPopup}</p>
+            <p className="text-muted text-sm">Amazing work! Keep reading to reach the next level.</p>
+            <button
+              onClick={() => setLevelUpPopup(null)}
+              className="px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold transition-all active:scale-95"
+            >
+              Awesome!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header — simplified, bottom nav handles main navigation */}
       <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -508,7 +552,7 @@ export default function Home() {
 
         {/* === Dashboard === */}
         {step === 'dashboard' && (
-          <Dashboard onStartReading={() => setStep('select')} />
+          <Dashboard onStartReading={() => setStep('select')} onQuickReview={handleQuickReview} onErrorPatternDrill={handleErrorPatternDrill} />
         )}
 
         {/* === Word Bank === */}
