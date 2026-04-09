@@ -277,10 +277,16 @@ export default function Home() {
       // Auto-add mispronounced words to spaced rep queue
       try {
         const { addWordsToQueue } = await import('@/lib/growth/spaced-rep')
-        const wordsToQueue: { word: string; tip: string }[] = []
+        const wordsToQueue: { word: string; tip: string; contextSentence?: string; sourceMaterial?: string; sourceTheme?: string }[] = []
         if (pronResult?.mispronounced) {
           for (const m of pronResult.mispronounced) {
-            if (m.word.length > 1) wordsToQueue.push({ word: m.word, tip: m.tip })
+            if (m.word.length > 1) wordsToQueue.push({
+              word: m.word,
+              tip: m.tip,
+              contextSentence: paragraph.text.slice(0, 200),
+              sourceMaterial: material.title,
+              sourceTheme: material.theme,
+            })
           }
         }
         if (wordsToQueue.length > 0) addWordsToQueue(wordsToQueue)
