@@ -1,4 +1,5 @@
 import type { Material, Theme } from '@/types'
+export { getCompletedMaterialIds } from './reading-history'
 
 interface RecommendationContext {
   readingLevel: number
@@ -11,17 +12,6 @@ interface RecommendationContext {
 interface Recommendation {
   material: Material
   reason: string
-}
-
-const READING_HISTORY_KEY = 'isa-reading-history'
-
-export function getCompletedMaterialIds(): string[] {
-  try {
-    const raw = localStorage.getItem(READING_HISTORY_KEY)
-    if (!raw) return []
-    const history = JSON.parse(raw)
-    return Object.keys(history)
-  } catch { return [] }
 }
 
 export function getRecommendations(materials: Material[], ctx: RecommendationContext): Recommendation[] {
